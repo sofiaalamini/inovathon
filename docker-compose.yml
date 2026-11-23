@@ -1,0 +1,16 @@
+# Só o banco. O backend e o frontend rodam na sua máquina (veja o README).
+services:
+  banco:
+    image: postgres:16
+    container_name: panocerto-banco
+    environment:
+      POSTGRES_DB: ${DB_NAME:-panocerto}
+      POSTGRES_USER: ${DB_USER:-panocerto}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-panocerto}
+    ports:
+      - "5432:5432"
+    volumes:
+      - dados-banco:/var/lib/postgresql/data
+
+volumes:
+  dados-banco:

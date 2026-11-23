@@ -1,0 +1,17 @@
+# Perfil dos testes: H2 só em memória, sem chaves externas.
+spring:
+  config:
+    import: ""
+  datasource:
+    url: jdbc:h2:mem:testes;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+
+panocerto:
+  anthropic-api-key: ""
+  openai-api-key: ""
+  whatsapp-token: ""
+  whatsapp-phone-number-id: ""
+  whatsapp-verify-token: token-de-teste
+  whatsapp-app-secret: segredo-de-teste
+  pasta-uploads: ./target/uploads-teste

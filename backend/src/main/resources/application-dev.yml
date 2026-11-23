@@ -1,0 +1,6 @@
+# Perfil "dev": banco H2 em arquivo (pasta backend/dados), não precisa de Docker.
+spring:
+  datasource:
+    url: jdbc:h2:file:./dados/panocerto;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password: ""

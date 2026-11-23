@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+/* Identidade visual do PanoCerto: lavoura do Oeste do Paraná.
+   Só estes tokens de cor existem (a paleta padrão do Tailwind foi desligada).
+   Terra roxa é usada SOMENTE para "aplicar". Sem gradientes e sem sombras pesadas. */
+@theme static {
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* linho do pano: fundo e superfícies (base = 200) */
+  --color-linho-50: #fcfaf6;
+  --color-linho-100: #f9f6ef;
+  --color-linho-200: #f4efe6;
+  --color-linho-300: #eae3d4;
+  --color-linho-400: #dcd2bd;
+  --color-linho-500: #c6b99d;
+  --color-linho-600: #a39577;
+  --color-linho-700: #7d7159;
+  --color-linho-800: #574e3e;
+  --color-linho-900: #382f2a;
+
+  /* verde da soja: primária (base = 600) */
+  --color-soja-50: #f0f6f1;
+  --color-soja-100: #ddebdf;
+  --color-soja-200: #bbd7c0;
+  --color-soja-300: #8fbc98;
+  --color-soja-400: #5e9b6b;
+  --color-soja-500: #3f8050;
+  --color-soja-600: #2f6b3a;
+  --color-soja-700: #265a31;
+  --color-soja-800: #1f4928;
+  --color-soja-900: #17371f;
+
+  /* dourado da soja madura: destaques e "atenção" (base = 500) */
+  --color-ouro-50: #fbf7e6;
+  --color-ouro-100: #f6edc4;
+  --color-ouro-200: #eedc8e;
+  --color-ouro-300: #e3c75a;
+  --color-ouro-400: #d6b33a;
+  --color-ouro-500: #c9a227;
+  --color-ouro-600: #a8851d;
+  --color-ouro-700: #826718;
+  --color-ouro-800: #5e4a14;
+  --color-ouro-900: #3f3210;
+
+  /* ardósia: neutro e "sem dado" (base = 500) */
+  --color-ardosia-50: #f3f5f6;
+  --color-ardosia-100: #e4e8ea;
+  --color-ardosia-200: #cbd2d6;
+  --color-ardosia-300: #a9b3b9;
+  --color-ardosia-400: #818d95;
+  --color-ardosia-500: #5b6770;
+  --color-ardosia-600: #4c565e;
+  --color-ardosia-700: #3e474e;
+  --color-ardosia-800: #2f363c;
+  --color-ardosia-900: #21272b;
+
+  /* terra roxa: SOMENTE "aplicar" (base = 600) */
+  --color-terra-50: #fbf1f0;
+  --color-terra-100: #f4dad8;
+  --color-terra-200: #e6b3af;
+  --color-terra-300: #d08780;
+  --color-terra-400: #b35a52;
+  --color-terra-500: #94403a;
+  --color-terra-600: #7a2e2a;
+  --color-terra-700: #62241f;
+  --color-terra-800: #4a1b18;
+  --color-terra-900: #331311;
+
+  --font-titulo: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-texto: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-numero: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background-color: var(--color-linho-200);
+    color: var(--color-ardosia-900);
+    font-family: var(--font-texto);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-titulo);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-ouro-500);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .campo {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid var(--color-ardosia-300);
+    border-radius: var(--radius-md);
+    background: var(--color-linho-50);
+    padding: 0.5rem 0.75rem;
+    color: var(--color-ardosia-900);
+  }
+  .campo::placeholder {
+    color: var(--color-ardosia-400);
+  }
+  .campo:focus-visible {
+    outline-offset: 0;
+    border-color: var(--color-soja-600);
+  }
+  .rotulo {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ardosia-800);
+  }
+  .ajuda {
+    font-size: 0.8125rem;
+    color: var(--color-ardosia-500);
+  }
+  .btn {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.12s, border-color 0.12s;
+  }
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  .btn-primario {
+    background: var(--color-soja-600);
+    color: var(--color-linho-50);
+  }
+  .btn-primario:hover:not(:disabled) {
+    background: var(--color-soja-700);
+  }
+  .btn-contorno {
+    border-color: var(--color-soja-600);
+    color: var(--color-soja-700);
+  }
+  .btn-contorno:hover:not(:disabled) {
+    background: var(--color-soja-50);
+  }
+  .btn-neutro {
+    border-color: var(--color-ardosia-300);
+    background: var(--color-linho-50);
+    color: var(--color-ardosia-800);
+  }
+  .btn-neutro:hover:not(:disabled) {
+    background: var(--color-ardosia-50);
+    border-color: var(--color-ardosia-400);
+  }
+  /* terra roxa: reservado para a ação de aplicar */
+  .btn-aplicar {
+    background: var(--color-terra-600);
+    color: var(--color-linho-50);
+  }
+  .btn-aplicar:hover:not(:disabled) {
+    background: var(--color-terra-700);
+  }
+  .btn-pequeno {
+    min-height: 36px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  .btn-icone {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 0.25rem;
+  }
+  .cartao {
+    border: 1px solid var(--color-linho-400);
+    border-radius: var(--radius-lg);
+    background: var(--color-linho-50);
+    padding: 1.25rem;
+  }
+  .numero {
+    font-family: var(--font-numero);
+    font-variant-numeric: tabular-nums;
+  }
+  .rotulo-secao {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ardosia-500);
+  }
+}
