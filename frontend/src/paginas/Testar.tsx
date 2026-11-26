@@ -93,12 +93,12 @@ async function chamar<T>(caminho: string, opcoes: RequestInit = {}): Promise<T> 
 async function reduzir(arquivo: File): Promise<Blob> {
   try {
     const imagem = await createImageBitmap(arquivo)
-    const escala = Math.min(1, 2048 / Math.max(imagem.width, imagem.height))
+    const escala = Math.min(1, 1024 / Math.max(imagem.width, imagem.height))   // 1024 px basta para contar e sobe rápido
     const tela = document.createElement('canvas')
     tela.width = Math.round(imagem.width * escala)
     tela.height = Math.round(imagem.height * escala)
     tela.getContext('2d')?.drawImage(imagem, 0, 0, tela.width, tela.height)
-    const reduzida = await new Promise<Blob | null>((ok) => tela.toBlob(ok, 'image/jpeg', 0.85))
+    const reduzida = await new Promise<Blob | null>((ok) => tela.toBlob(ok, 'image/jpeg', 0.88))
     return reduzida ?? arquivo
   } catch {
     return arquivo

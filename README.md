@@ -93,7 +93,7 @@ Cada pessoa que abre `/testar` vira um produtor fictício com dois talhões; os 
 
 **Plano B:** no painel, **segure o logo PanoCerto por 1 segundo** (celular ou computador). Um ponto dourado pequeno
 no logo mostra que está ligado; segure de novo para desligar. Foto e áudio passam a usar respostas prontas,
-avisadas na conversa. Se a IA demorar mais de 9 s ou falhar, só aquela mensagem cai na demonstração.
+avisadas na conversa. Se a IA demorar mais de 14 s ou falhar, só aquela mensagem cai na demonstração.
 No áudio em demonstração, o robô usa o que o navegador entendeu da fala e pergunta "Está certo?".
 
 Limites: 60 visitantes e 80 mensagens por visitante. O link muda a cada vez que o script roda.

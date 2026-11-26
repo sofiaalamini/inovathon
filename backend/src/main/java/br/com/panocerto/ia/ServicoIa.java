@@ -50,7 +50,7 @@ public class ServicoIa {
     }
 
     /** Se a IA não responder neste prazo, a mensagem segue com a demonstração (a banca não espera). */
-    static final int PRAZO_SEGUNDOS = 9;
+    static final int PRAZO_SEGUNDOS = 14;
     private final ExecutorService chamadas = Executors.newCachedThreadPool();
 
     /** Roda a chamada à IA com prazo. Passou do prazo: desiste e lança erro, para cair no plano B. */
