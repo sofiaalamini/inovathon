@@ -37,13 +37,20 @@ public final class ParserTexto {
         }
     }
 
-    private static final Pattern PERCEVEJO_COM_NUMERO_ANTES = Pattern.compile("(\\d{1,3})\\s*percevejos?");
+    private static final Pattern PERCEVEJO_COM_NUMERO_ANTES = Pattern.compile("(?<![\\d-])(\\d{1,3})\\s*percevejos?");
     private static final Pattern PERCEVEJO_COM_DOIS_PONTOS = Pattern.compile("percevejos?\\s*[:=]\\s*(\\d{1,3})");
-    private static final Pattern LAGARTA_COM_NUMERO_ANTES = Pattern.compile("(\\d{1,3})\\s*lagartas?");
+    private static final Pattern LAGARTA_COM_NUMERO_ANTES = Pattern.compile("(?<![\\d-])(\\d{1,3})\\s*lagartas?");
     private static final Pattern LAGARTA_COM_DOIS_PONTOS = Pattern.compile("lagartas?\\s*[:=]\\s*(\\d{1,3})");
     private static final Pattern DESFOLHA_COM_PORCENTO = Pattern.compile("(\\d{1,3})(?:[.,]\\d+)?\\s*(?:%|por\\s*cento)");
     private static final Pattern DESFOLHA_COM_PALAVRA = Pattern.compile("desfolha\\w*\\s*[:=]?\\s*(?:de\\s*)?(\\d{1,3})");
     private static final Pattern NUMERO_SOLTO = Pattern.compile("\\d{1,3}");
+
+    private static final Pattern NEGATIVO = Pattern.compile("-\\s*\\d+\\s*(?:percevejo|lagarta)");
+    private static final Pattern GRANDE_DEMAIS = Pattern.compile("(?<!\\d)\\d{4,}\\s*(?:percevejo|lagarta)");
+    private static final Pattern PORCENTAGEM = Pattern.compile("(?<![\\d.,])(\\d+)(?:[.,]\\d+)?\\s*(?:%|por\\s*cento)");
+    /** O que cabe num texto "simples": números, os nomes das pragas e a desfolha. */
+    private static final Pattern PALAVRAS_SIMPLES = Pattern.compile(
+            "\\d+|percevejos?|lagartas?|grandes?|desfolhas?|folhas?|comidas?|por|cento|ponto|pano|de|e|[%,.;:=+\\s-]");
 
     private ParserTexto() {
     }
@@ -98,6 +105,33 @@ public final class ParserTexto {
             return null;
         }
         return valor;
+    }
+
+    /** Número que não pode ser verdade (negativo, 4 dígitos ou mais, % acima de 100): devolve a mensagem amigável. */
+    public static String problema(String texto) {
+        String t = normalizar(texto);
+        if (NEGATIVO.matcher(t).find()) {
+            return "Contagem negativa não existe. Mande de novo, assim: 2 percevejos 3 lagartas 10%";
+        }
+        if (GRANDE_DEMAIS.matcher(t).find()) {
+            return "Esse número está alto demais para um pano. Confira e mande de novo, assim: 2 percevejos 3 lagartas 10%";
+        }
+        Matcher m = PORCENTAGEM.matcher(t);
+        while (m.find()) {
+            if (Integer.parseInt(m.group(1)) > 100) {
+                return "A folha comida vai de 0 a 100%. Confira e mande de novo.";
+            }
+        }
+        return null;
+    }
+
+    /**
+     * O texto é só "número + praga" (ex.: "2 percevejos 3 lagartas 10%")? Então o parser resolve.
+     * Frases com outras palavras ("umas trinta lagartinhas pequenas e só uma grande") vão para a IA.
+     */
+    public static boolean simples(String texto) {
+        String t = normalizar(texto);
+        return !t.isBlank() && PALAVRAS_SIMPLES.matcher(t).replaceAll("").isBlank();
     }
 
     /** Normaliza um comando: "  Apliquei! " vira "apliquei". */

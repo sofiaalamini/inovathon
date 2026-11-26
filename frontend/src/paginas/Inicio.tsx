@@ -8,7 +8,8 @@ import { MapaTalhoes } from '../componentes/MapaTalhoes'
 import { StatusBadge } from '../componentes/StatusBadge'
 import { dinheiro, inteiro, numero, textoDias } from '../formatar'
 import { mensagemDeErro, useAtualizarSozinho, useCarregar } from '../hooks'
-import type { Dashboard, NivelAcao, PressaoSemanal, Produtor, TalhaoResumo } from '../tipos'
+import type { Dashboard, NivelAcao, PressaoSemanal, Produtor, StatusSistema, TalhaoResumo } from '../tipos'
+import { BotaoConfirmar } from '../componentes/BotaoConfirmar'
 import { useToast } from '../contextoToast'
 
 function Medias({ t }: { t: TalhaoResumo }) {
@@ -78,6 +79,7 @@ export function Inicio() {
   const talhoes = useCarregar(() => api.get<TalhaoResumo[]>('/api/talhoes'))
   const produtores = useCarregar(() => api.get<Produtor[]>('/api/produtores'))
   const niveis = useCarregar(() => api.get<NivelAcao[]>('/api/niveis'))
+  const sistema = useCarregar(() => api.get<StatusSistema>('/api/sistema'))
   const toast = useToast()
   const [hoje] = useState(() => new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }))
   const [enviando, setEnviando] = useState<number | null>(null)
@@ -96,6 +98,17 @@ export function Inicio() {
     novos.forEach((t) => toast.sucesso(`Novo alerta: ${t.produtorNome}, talhão ${t.nome}.`))
     alertasVistos.current = new Set(acima.flatMap((t) => (t.alertaId === null ? [] : [t.alertaId])))
   }, [dash.dados, toast])
+
+  async function limparTestes() {
+    try {
+      await api.post('/api/sistema/limpar-testes')
+      alertasVistos.current = null
+      await Promise.all([dash.recarregar(true), talhoes.recarregar(true), produtores.recarregar(true)])
+      toast.sucesso('Testes apagados. O painel voltou aos dados de exemplo.')
+    } catch (e) {
+      toast.erro(mensagemDeErro(e))
+    }
+  }
 
   async function confirmar(t: TalhaoResumo) {
     setConfirmando(t.id)
@@ -128,17 +141,23 @@ export function Inicio() {
   const d = dash.dados
   if (dash.erro || !d) return <Erro mensagem={dash.erro ?? 'Sem dados.'} aoTentarDeNovo={() => void dash.recarregar()} />
 
-  const todosTalhoes = talhoes.dados ?? []
+  // Os visitantes da banca aparecem nos alertas, mas não nos indicadores da cooperativa
+  const todosTalhoes = (talhoes.dados ?? []).filter((t) => !t.visitante)
   const monitorados = todosTalhoes.filter((t) => t.diasSemMonitorar < 7)
   const produtoresAtivos = new Set(monitorados.map((t) => t.produtorId)).size
-  const totalProdutores = produtores.dados?.length ?? 0
+  const totalProdutores = produtores.dados?.filter((p) => !p.visitante).length ?? 0
   const nivelGrao = niveis.dados?.find((n) => n.chave === 'PERCEVEJO_GRAO')?.valor
   const nivelSemente = niveis.dados?.find((n) => n.chave === 'PERCEVEJO_SEMENTE')?.valor
   const semana = d.pressaoSemanal[d.pressaoSemanal.length - 1]
 
   return (
     <>
-      <Titulo subtitulo={`${hoje.charAt(0).toUpperCase()}${hoje.slice(1)}. Resumo da safra e dos talhões da cooperativa.`}>Início</Titulo>
+      <Titulo
+        subtitulo={`${hoje.charAt(0).toUpperCase()}${hoje.slice(1)}. Resumo da safra e dos talhões da cooperativa.`}
+        acao={sistema.dados?.modoBanca && <BotaoConfirmar pergunta="Apagar os testes da banca?" aoConfirmar={limparTestes}>Limpar testes</BotaoConfirmar>}
+      >
+        Início
+      </Titulo>
 
       {/* O que precisa de atenção hoje */}
       <section aria-labelledby="atencao" className={`mb-6 overflow-hidden rounded-lg border bg-linho-50 ${d.acima.length > 0 ? 'border-terra-300 border-l-4 border-l-terra-600' : 'border-linho-400 border-l-4 border-l-soja-600'}`}>

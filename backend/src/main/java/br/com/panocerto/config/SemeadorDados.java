@@ -6,6 +6,8 @@ import br.com.panocerto.modelo.*;
 import br.com.panocerto.repositorio.*;
 import br.com.panocerto.servico.ServicoNiveis;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -60,12 +62,14 @@ public class SemeadorDados implements CommandLineRunner {
     private final RepositorioMensagemLog mensagens;
     private final ServicoNiveis niveis;
     private final PasswordEncoder encoder;
+    private final JdbcTemplate jdbc;
 
     public SemeadorDados(Configuracao config, RepositorioCooperativa cooperativas, RepositorioUsuario usuarios,
                          RepositorioProdutor produtores, RepositorioTalhao talhoes,
                          RepositorioMonitoramento monitoramentos, RepositorioAmostra amostras,
                          RepositorioAplicacao aplicacoes, RepositorioAlerta alertas,
-                         RepositorioMensagemLog mensagens, ServicoNiveis niveis, PasswordEncoder encoder) {
+                         RepositorioMensagemLog mensagens, ServicoNiveis niveis, PasswordEncoder encoder,
+                         JdbcTemplate jdbc) {
         this.config = config;
         this.cooperativas = cooperativas;
         this.usuarios = usuarios;
@@ -78,6 +82,7 @@ public class SemeadorDados implements CommandLineRunner {
         this.mensagens = mensagens;
         this.niveis = niveis;
         this.encoder = encoder;
+        this.jdbc = jdbc;
     }
 
     @Override
@@ -113,6 +118,20 @@ public class SemeadorDados implements CommandLineRunner {
         tecnico.setCooperativa(coop);
         usuarios.save(tecnico);
 
+        criarDados(coop);
+    }
+
+    /** Apaga produtores, talhões e conversas (de todas as cooperativas) e recria os dados de exemplo. */
+    @Transactional
+    public void recriarDadosDeExemplo(Long cooperativaId) {
+        for (String tabela : List.of("mensagem_log", "conversa_estado", "alerta", "aplicacao", "amostra",
+                "monitoramento", "talhao", "produtor")) {
+            jdbc.update("delete from " + tabela);
+        }
+        criarDados(cooperativas.findById(cooperativaId).orElseThrow());
+    }
+
+    private void criarDados(Cooperativa coop) {
         List<Produtor> listaProdutores = new ArrayList<>();
         for (String[] dados : PRODUTORES) {
             Produtor p = new Produtor();

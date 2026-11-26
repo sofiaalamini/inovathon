@@ -40,6 +40,10 @@ public class ServicoRobo {
 
     /** Abaixo disso, a contagem da foto pode estar errada e o produtor confirma. */
     private static final double CONFIANCA_MINIMA = 0.6;
+    /** Abaixo disso, a foto provavelmente nem é de um pano de batida. */
+    private static final double CONFIANCA_PANO = 0.3;
+    /** Mais que isso num pano só é raro: o produtor confirma antes de registrar. */
+    static final int LIMITE_CONFERIR = 50;
 
     static final String MSG_NAO_CADASTRADO =
             "Olá! Seu número ainda não está cadastrado. Peça para o técnico da sua cooperativa te cadastrar.";
@@ -182,12 +186,18 @@ public class ServicoRobo {
             }
         } else if (botaoId.equals("CONT_OK")) {
             if (c.getEstado() == EstadoConversa.CONFIRMANDO_CONTAGEM) {
-                perguntarDesfolha(c, p, "");
+                confirmarPendencia(c, p);
             } else {
                 envio.texto(p, "Mande a foto, o áudio ou o texto do ponto.");
             }
         } else if (botaoId.equals("CONT_DIGITAR")) {
-            envio.texto(p, "Corrija a contagem, assim: 2 percevejos 3 lagartas");
+            envio.texto(p, c.getEstado() == EstadoConversa.CONFIRMANDO_CONTAGEM
+                    ? "Corrija a contagem, assim: 2 percevejos 3 lagartas"
+                    : "Conte no botão Contar ou escreva assim: 2 percevejos 3 lagartas 10%");
+        } else if (botaoId.equals("FOTO_NOVA")) {
+            envio.texto(p, "Mande outra foto do pano, de perto e com boa luz.");
+        } else if (botaoId.equals("TROCAR")) {
+            comandoTrocar(c, p);
         } else {
             envio.texto(p, MSG_AJUDA);
         }
@@ -225,15 +235,18 @@ public class ServicoRobo {
         }
 
         if (c.getEstado() == EstadoConversa.CONFIRMANDO_CONTAGEM && ehConfirmacao(comando)) {
-            perguntarDesfolha(c, p, "");
+            confirmarPendencia(c, p);
             return;
         }
 
-        // Texto de contagem: primeiro a expressão regular, depois a IA.
-        ParserTexto.Numeros numeros = ParserTexto.interpretar(texto);
-        if (!numeros.temContagem()) {
-            numeros = ia.extrairNumeros(texto);
+        String problema = ParserTexto.problema(texto);
+        if (problema != null) {
+            envio.texto(p, problema);
+            return;
         }
+
+        // Texto simples ("2 percevejos 3 lagartas 10%"): o parser resolve na hora. Frase solta: a IA lê.
+        ParserTexto.Numeros numeros = ParserTexto.simples(texto) ? ParserTexto.interpretar(texto) : ia.extrairNumeros(texto);
         if (numeros.temContagem()) {
             receberContagem(c, p, numeros, Origem.TEXTO, null, null, "Entendi: ");
         } else if (c.getEstado() == EstadoConversa.AGUARDANDO_DESFOLHA) {
@@ -259,13 +272,20 @@ public class ServicoRobo {
             return;
         }
         ServicoIa.Contagem contagem = ia.contarInsetos(midia.bytes(), midia.tipoMime());
+        if (contagem.confianca() < CONFIANCA_PANO || (contagem.percevejos() == 0 && contagem.lagartas() == 0)) {
+            // Nada registrado: o produtor tenta outra foto ou conta no botão.
+            envio.botoes(p, "Não parece uma foto do pano. Quer tentar de novo ou contar no botão?",
+                    List.of(new Opcao("FOTO_NOVA", "Tentar de novo"), new Opcao("CONT_DIGITAR", "Contar no botão")));
+            return;
+        }
         guardarPendencia(c, contagem.percevejos(), contagem.lagartas(), Origem.FOTO, urlMidia, null);
 
         String aviso = contagem.simulada() ? " (contagem de demonstração)" : "";
-        if (contagem.confianca() < CONFIANCA_MINIMA) {
+        boolean muito = contagem.percevejos() > LIMITE_CONFERIR || contagem.lagartas() > LIMITE_CONFERIR;
+        if (contagem.confianca() < CONFIANCA_MINIMA || muito) {
             c.setEstado(EstadoConversa.CONFIRMANDO_CONTAGEM);
-            envio.botoes(p, "Não tenho certeza da foto. Contei " + contar(contagem.percevejos(), contagem.lagartas())
-                            + ". Está certo?",
+            envio.botoes(p, (muito ? "" : "Não tenho certeza da foto. ") + "Contei "
+                            + contar(contagem.percevejos(), contagem.lagartas()) + aviso + ". Está certo?",
                     List.of(new Opcao("CONT_OK", "Está certo"), new Opcao("CONT_DIGITAR", "Corrigir")));
             return;
         }
@@ -283,25 +303,28 @@ public class ServicoRobo {
         }
         ServicoIa.Transcricao ouvido = ia.transcrever(midia.bytes(), midia.tipoMime(), dicaDoNavegador);
         String transcricao = ouvido.texto();
-        // O parser é instantâneo; a IA só entra se ele não achar os números.
-        ParserTexto.Numeros numeros = ParserTexto.interpretar(transcricao);
-        if (!numeros.temContagem() && !ouvido.simulada()) {
-            numeros = ia.extrairNumeros(transcricao);
+        // "Ouvi" só quando é o que a pessoa falou (IA ou navegador), nunca a frase pronta da demonstração.
+        boolean ouviuDeVerdade = !ouvido.simulada() || (dicaDoNavegador != null && !dicaDoNavegador.isBlank());
+        String ouvi = ouviuDeVerdade ? "Ouvi: \"" + transcricao + "\".\n" : "";
+
+        String problema = ParserTexto.problema(transcricao);
+        if (problema != null) {
+            envio.texto(p, ouvi + problema);
+            return;
         }
+        ParserTexto.Numeros numeros = ParserTexto.simples(transcricao) || ouvido.simulada()
+                ? ParserTexto.interpretar(transcricao) : ia.extrairNumeros(transcricao);
         if (!numeros.temContagem()) {
-            envio.texto(p, "Ouvi: \"" + transcricao + "\". Mas não achei a contagem. "
-                    + "Mande de novo falando assim: dois percevejos, três lagartas.");
+            envio.texto(p, ouvi + "Não achei a contagem. Mande de novo falando assim: dois percevejos, três lagartas.");
             return;
         }
-        if (ouvido.simulada()) {
-            // Transcrição aproximada: o produtor confere antes de virar ponto.
-            guardarPendencia(c, numeros.percevejos(), numeros.lagartas(), Origem.AUDIO, urlMidia, transcricao);
-            c.setEstado(EstadoConversa.CONFIRMANDO_CONTAGEM);
-            envio.botoes(p, "Entendi: " + contar(numeros.percevejos(), numeros.lagartas()) + ". Está certo?",
-                    List.of(new Opcao("CONT_OK", "Está certo"), new Opcao("CONT_DIGITAR", "Corrigir")));
-            return;
-        }
-        receberContagem(c, p, numeros, Origem.AUDIO, urlMidia, transcricao, "Entendi: ");
+        // Áudio sempre passa pela conferência do produtor antes de virar ponto.
+        guardarPendencia(c, numeros.percevejos(), numeros.lagartas(), Origem.AUDIO, urlMidia, transcricao);
+        c.setPendenteDesfolha(numeros.desfolha());
+        c.setEstado(EstadoConversa.CONFIRMANDO_CONTAGEM);
+        String desfolha = numeros.desfolha() == null ? "" : " e " + numeros.desfolha() + "% de desfolha";
+        envio.botoes(p, ouvi + "Entendi: " + contar(numeros.percevejos(), numeros.lagartas()) + desfolha + ". Está certo?",
+                List.of(new Opcao("CONT_OK", "Está certo"), new Opcao("CONT_DIGITAR", "Corrigir")));
     }
 
     // ------------------------------------------------------------------ amostra
@@ -314,12 +337,28 @@ public class ServicoRobo {
             return;
         }
         guardarPendencia(c, n.percevejos(), n.lagartas(), origem, urlMidia, transcricao);
+        if (n.percevejos() > LIMITE_CONFERIR || n.lagartas() > LIMITE_CONFERIR) {
+            c.setPendenteDesfolha(n.desfolha());
+            c.setEstado(EstadoConversa.CONFIRMANDO_CONTAGEM);
+            envio.botoes(p, "Contei " + contar(n.percevejos(), n.lagartas()) + " num pano só. É bastante: está certo?",
+                    List.of(new Opcao("CONT_OK", "Sim, está certo"), new Opcao("CONT_DIGITAR", "Corrigir")));
+            return;
+        }
         String entendi = prefixo + contar(n.percevejos(), n.lagartas());
         if (n.desfolha() != null) {
             envio.texto(p, prefixo + contarComDesfolha(n.percevejos(), n.lagartas(), n.desfolha()) + ".");
             finalizarAmostra(c, p, n.desfolha());
         } else {
             perguntarDesfolha(c, p, entendi + ". ");
+        }
+    }
+
+    /** O produtor confirmou a contagem: se a desfolha já veio junto, fecha o ponto; senão pergunta. */
+    private void confirmarPendencia(ConversaEstado c, Produtor p) {
+        if (c.getPendenteDesfolha() != null) {
+            finalizarAmostra(c, p, c.getPendenteDesfolha());
+        } else {
+            perguntarDesfolha(c, p, "");
         }
     }
 
@@ -336,6 +375,7 @@ public class ServicoRobo {
         c.setPendenteOrigem(origem);
         c.setPendenteUrlMidia(urlMidia);
         c.setPendenteTranscricao(transcricao);
+        c.setPendenteDesfolha(null);
     }
 
     /** Fecha o ponto: grava a amostra e, se completou 3 pontos, responde com a decisão. */
@@ -356,7 +396,7 @@ public class ServicoRobo {
         var res = r.resultado();
         String texto = "Monitoramento do talhão " + talhao.getNome() + " completo (3 pontos).\n"
                 + "Média por pano: " + numero(res.mediaPercevejos()) + " percevejos, "
-                + numero(res.mediaLagartas()) + " lagartas, desfolha " + numero(res.mediaDesfolha()) + "%.\n"
+                + numero(res.mediaLagartas()) + " lagartas, desfolha " + porcento(res.mediaDesfolha()) + "%.\n"
                 + res.mensagem();
         if (r.alerta() != null) {
             texto += "\nO técnico da cooperativa foi avisado e vai confirmar com você.";
@@ -407,7 +447,7 @@ public class ServicoRobo {
             Monitoramento m = concluido.get();
             envio.texto(p, "Último resultado do talhão " + talhao.getNome() + " (" + m.getDataHora().toLocalDate() + "):\n"
                     + "Média por pano: " + numero(m.getMediaPercevejos()) + " percevejos, "
-                    + numero(m.getMediaLagartas()) + " lagartas, desfolha " + numero(m.getMediaDesfolha()) + "%.\n"
+                    + numero(m.getMediaLagartas()) + " lagartas, desfolha " + porcento(m.getMediaDesfolha()) + "%.\n"
                     + mensagemDaDecisao(m.getDecisao()));
         } else {
             envio.texto(p, "O talhão " + talhao.getNome() + " ainda não tem monitoramento. Mande o primeiro ponto.");
@@ -504,6 +544,11 @@ public class ServicoRobo {
     /** "3 percevejos, 4 lagartas e 10% de desfolha" */
     private String contarComDesfolha(int percevejos, int lagartas, int desfolha) {
         return contar(percevejos, lagartas).replace(" e ", ", ") + " e " + desfolha + "% de desfolha";
+    }
+
+    /** Desfolha sem casa decimal, igual ao painel e ao cartão de resultado. */
+    private String porcento(Double valor) {
+        return String.valueOf(Math.round(valor == null ? 0.0 : valor));
     }
 
     private String numero(Double valor) {

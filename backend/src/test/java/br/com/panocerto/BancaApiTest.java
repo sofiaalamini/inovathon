@@ -79,6 +79,36 @@ class BancaApiTest {
     }
 
     @Test
+    void numeroAltoPedeConfirmacaoEFotoQueNaoEhPanoNaoRegistra() throws Exception {
+        String dani = entrar("Dani");
+        mandar(dani, "BOTAO", "Sede", primeiroBotao(dani));
+        mandar(dani, "TEXTO", "80 percevejos 2 lagartas 10%", null);
+        String corpo = api.perform(get("/api/banca/mensagens").header("X-Visitante", dani))
+                .andReturn().getResponse().getContentAsString();
+        String ultima = JsonPath.read(corpo, "$[-1].texto");
+        org.junit.jupiter.api.Assertions.assertTrue(ultima.contains("está certo?"), ultima);
+        api.perform(get("/api/banca/resumo").header("X-Visitante", dani)).andExpect(jsonPath("$.pontos.length()").value(0));
+
+        // confirmou: a desfolha que veio junto é usada, sem perguntar de novo
+        mandar(dani, "BOTAO", "Sim", "CONT_OK");
+        api.perform(get("/api/banca/resumo").header("X-Visitante", dani)).andExpect(jsonPath("$.pontos[0].desfolha").value(10));
+    }
+
+    @Test
+    void visitanteNaoEntraNosIndicadores() throws Exception {
+        String token = JsonPath.read(api.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"tecnico@panocerto.com\",\"senha\":\"123456\"}"))
+                .andReturn().getResponse().getContentAsString(), "$.token");
+        String antes = api.perform(get("/api/dashboard").header("Authorization", "Bearer " + token))
+                .andReturn().getResponse().getContentAsString();
+        entrar("Eva");
+        String depois = api.perform(get("/api/dashboard").header("Authorization", "Bearer " + token))
+                .andReturn().getResponse().getContentAsString();
+        org.junit.jupiter.api.Assertions.assertEquals((Double) JsonPath.read(antes, "$.economiaEstimada"),
+                (Double) JsonPath.read(depois, "$.economiaEstimada"));
+    }
+
+    @Test
     void codigoInventadoENomeVazioSaoRecusados() throws Exception {
         api.perform(get("/api/banca/mensagens").header("X-Visitante", "inventado"))
                 .andExpect(status().isGone());

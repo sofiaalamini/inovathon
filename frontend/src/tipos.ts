@@ -22,6 +22,8 @@ export interface TalhaoResumo {
   mediaLagartas: number | null
   mediaDesfolha: number | null
   alertaId: number | null
+  aplicado: boolean
+  visitante: boolean
 }
 
 export interface Amostra {
@@ -101,6 +103,7 @@ export interface Produtor {
   nome: string
   telefone: string
   talhoes: TalhaoResumo[]
+  visitante: boolean
 }
 
 export interface ResumoConversa {
@@ -138,5 +141,6 @@ export interface StatusSistema {
   whatsapp: 'simulador' | 'cloud-api'
   iaDemo: boolean
   planoB: boolean
+  modoBanca: boolean
   custoAplicacaoHa: number
 }

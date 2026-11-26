@@ -2,8 +2,8 @@ import { Minus, Plus } from 'lucide-react'
 import { useState } from 'react'
 
 const CAMPOS = [
-  { id: 'percevejos', rotulo: 'Percevejos', dica: 'adultos e filhotes', passo: 1, maximo: 99, sufixo: '' },
-  { id: 'lagartas', rotulo: 'Lagartas grandes', dica: 'maiores que 1,5 cm', passo: 1, maximo: 99, sufixo: '' },
+  { id: 'percevejos', rotulo: 'Percevejos', dica: 'adultos e filhotes', passo: 1, maximo: 999, sufixo: '' },
+  { id: 'lagartas', rotulo: 'Lagartas grandes', dica: 'maiores que 1,5 cm', passo: 1, maximo: 999, sufixo: '' },
   { id: 'desfolha', rotulo: 'Folha comida', dica: 'no olho, em %', passo: 5, maximo: 100, sufixo: '%' },
 ] as const
 
@@ -26,7 +26,7 @@ export function Contador({ aoEnviar, inicial }: { aoEnviar: (texto: string) => v
           </div>
         </div>
       ))}
-      <button type="button" className="btn btn-primario min-h-14 w-full text-lg" onClick={() => aoEnviar(`${v.percevejos} percevejos ${v.lagartas} lagartas ${v.desfolha}%`)}>
+      <button type="button" className="btn btn-primario min-h-14 w-full text-lg" onClick={() => aoEnviar(`${v.percevejos} ${v.percevejos === 1 ? 'percevejo' : 'percevejos'} ${v.lagartas} ${v.lagartas === 1 ? 'lagarta' : 'lagartas'} ${v.desfolha}%`)}>
         {inicial ? 'Está certo assim, enviar' : 'Enviar este ponto'}
       </button>
     </div>

@@ -82,6 +82,8 @@ O simulador passa pelo **mesmo fluxo** (`ServicoRobo`) do webhook real.
 3. Abra o endereço `/convite` que o script mostra e projete o QR code.
 
 Cada pessoa que abre `/testar` vira um produtor fictício com dois talhões; os alertas dela aparecem no painel.
+**Limpar testes:** no Início do painel (só no modo banca) apaga os visitantes e recria os dados de exemplo. Use antes de subir ao palco.
+
 **Plano B:** no painel, **segure o logo PanoCerto por 1 segundo** (celular ou computador). Um ponto dourado pequeno
 no logo mostra que está ligado; segure de novo para desligar. Foto e áudio passam a usar respostas prontas,
 avisadas na conversa. Se a IA demorar mais de 9 s ou falhar, só aquela mensagem cai na demonstração.

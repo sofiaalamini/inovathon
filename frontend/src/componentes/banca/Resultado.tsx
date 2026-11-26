@@ -1,4 +1,4 @@
-import { CircleCheck, Clock, PiggyBank, TriangleAlert } from 'lucide-react'
+import { CalendarClock, CircleCheck, Clock, PiggyBank, TriangleAlert } from 'lucide-react'
 import { dinheiro, numero } from '../../formatar'
 
 export interface Medida { nome: string; media: number; limite: number | null; unidade: string }
@@ -41,7 +41,7 @@ function Barra({ m }: { m: Medida }) {
         <div className={`h-3 rounded-full ${passou ? 'bg-terra-600' : 'bg-soja-500'}`} style={{ width: `${(m.media / escala) * 100}%` }} />
         <span className="absolute -top-1 h-5 w-0.5 bg-ardosia-900" style={{ left: `${(m.limite / escala) * 100}%` }} />
       </div>
-      {passou && <p className="mt-1 text-sm font-semibold text-terra-700">Chegou no limite.</p>}
+      {passou && <p className="mt-1 text-sm font-semibold text-terra-700">{m.media > m.limite ? 'Passou do limite.' : 'Chegou no limite.'}</p>}
     </li>
   )
 }
@@ -67,7 +67,13 @@ export function Resultado({ talhao, r }: { talhao: string; r: ResultadoBanca }) 
           <h3 className="mb-2 text-lg">Por quê</h3>
           <ul className="space-y-3">{r.medidas.map((m) => <Barra key={m.nome} m={m} />)}</ul>
         </div>
-        {r.economia > 0 && (
+        {r.decisao === 'PERTO' && (
+          <div className="flex gap-3 rounded-md border border-ouro-400 bg-ouro-50 p-3">
+            <CalendarClock size={24} className="shrink-0 text-ouro-700" aria-hidden="true" />
+            <p>Ainda não é hora de gastar com inseticida. <strong>Monitore de novo em 3 dias</strong> para ver se a praga sobe.</p>
+          </div>
+        )}
+        {r.economia > 0 && r.decisao !== 'PERTO' && (
           <div className="flex gap-3 rounded-md border border-ouro-400 bg-ouro-50 p-3">
             <PiggyBank size={24} className="shrink-0 text-ouro-700" aria-hidden="true" />
             <p>

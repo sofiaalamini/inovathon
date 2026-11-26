@@ -92,6 +92,7 @@ public class PainelControle {
                 "whatsapp", mensageiro.modo(),
                 "iaDemo", ia.emDemonstracao(),
                 "planoB", ia.planoB(),
+                "modoBanca", config.modoBanca(),
                 "custoAplicacaoHa", config.custoAplicacaoHa());
     }
 

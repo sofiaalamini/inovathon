@@ -30,6 +30,7 @@ public class ConversaEstado {
     // Amostra pendente (ainda falta a desfolha ou a confirmação da contagem)
     private Integer pendentePercevejos;
     private Integer pendenteLagartas;
+    private Integer pendenteDesfolha;
 
     @Enumerated(EnumType.STRING)
     private Origem pendenteOrigem;
@@ -44,6 +45,7 @@ public class ConversaEstado {
         estado = EstadoConversa.LIVRE;
         pendentePercevejos = null;
         pendenteLagartas = null;
+        pendenteDesfolha = null;
         pendenteOrigem = null;
         pendenteUrlMidia = null;
         pendenteTranscricao = null;

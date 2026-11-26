@@ -66,6 +66,6 @@ public class ProdutorControle {
 
     private ProdutorDto paraDto(Produtor p) {
         return new ProdutorDto(p.getId(), p.getNome(), p.getTelefone(),
-                talhoes.findByProdutorIdOrderByNome(p.getId()).stream().map(painel::resumo).toList());
+                talhoes.findByProdutorIdOrderByNome(p.getId()).stream().map(painel::resumo).toList(), p.isVisitante());
     }
 }

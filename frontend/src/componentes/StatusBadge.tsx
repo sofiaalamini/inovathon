@@ -1,10 +1,11 @@
-import { CircleCheck, CircleDashed, Clock, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { CheckCheck, CircleCheck, CircleDashed, Clock, TriangleAlert, type LucideIcon } from 'lucide-react'
 import { statusDe, type Status } from '../status'
 import type { Decisao } from '../tipos'
 
 // Sempre cor E ícone E texto. Terra roxa só no "Aplicar".
 const CONFIG: Record<Status, { texto: string; longo: string; icone: LucideIcon; classe: string }> = {
   APLICAR: { texto: 'Aplicar', longo: 'Aplicar', icone: TriangleAlert, classe: 'bg-terra-600 text-linho-50 border-terra-600' },
+  APLICADO: { texto: 'Aplicado', longo: 'Aplicado (confirmado)', icone: CheckCheck, classe: 'bg-linho-50 text-soja-900 border-soja-700' },
   ATENCAO: { texto: 'Atenção', longo: 'Atenção: volte em 3 dias', icone: Clock, classe: 'bg-ouro-100 text-ouro-800 border-ouro-500' },
   OK: { texto: 'OK', longo: 'OK', icone: CircleCheck, classe: 'bg-soja-50 text-soja-800 border-soja-500' },
   SEM_DADO: { texto: 'Sem dado', longo: 'Sem dado', icone: CircleDashed, classe: 'bg-ardosia-100 text-ardosia-700 border-ardosia-300' },

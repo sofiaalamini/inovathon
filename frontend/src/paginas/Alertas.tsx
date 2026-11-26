@@ -30,8 +30,8 @@ export function Alertas() {
     try {
       await api.post(`/api/alertas/${a.id}/${acao}`)
       toast.sucesso(acao === 'confirmar'
-        ? `Aplicação confirmada no talhão ${a.talhaoNome}. ${a.produtorNome} foi avisado no WhatsApp.`
-        : `${a.produtorNome} foi avisado para revisitar o talhão ${a.talhaoNome}.`)
+        ? `Aplicação confirmada no talhão ${a.talhaoNome}. Aviso enviado para ${a.produtorNome} no WhatsApp.`
+        : `Aviso enviado para ${a.produtorNome}: revisitar o talhão ${a.talhaoNome}.`)
       void recarregar(true)
     } catch (e) {
       toast.erro(mensagemDeErro(e))

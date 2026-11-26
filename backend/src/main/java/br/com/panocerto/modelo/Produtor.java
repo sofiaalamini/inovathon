@@ -17,6 +17,9 @@ public class Produtor {
     private String nome;
     private String telefone;
 
+    /** Produtor fictício criado pela página da banca. */
+    private boolean visitante;
+
     @ManyToOne
     private Cooperativa cooperativa;
 }

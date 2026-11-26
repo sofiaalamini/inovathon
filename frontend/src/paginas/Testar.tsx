@@ -23,7 +23,7 @@ type Tipo = 'TEXTO' | 'IMAGEM' | 'AUDIO' | 'BOTAO'
 
 /** "Entendi: 3 percevejos e 4 lagartas. Está certo?" -> { 3, 4 } para abrir o contador já preenchido. */
 function contagemDaPergunta(texto: string | null): { percevejos: number; lagartas: number } | undefined {
-  const m = /(\d+) percevejos? e (\d+) lagartas?/.exec(texto ?? '')
+  const m = /(?:Entendi|Contei):? (\d+) percevejos? e (\d+) lagartas?/.exec(texto ?? '')
   return m ? { percevejos: Number(m[1]), lagartas: Number(m[2]) } : undefined
 }
 
@@ -181,9 +181,10 @@ export function Testar() {
   }, [precisaConferir])
 
   // A animação de espera fica sempre à vista
+  // (a foto entra no chat durante a espera: rola de novo para a animação não ficar escondida)
   useEffect(() => {
     if (enviando) fimDoChat.current?.scrollIntoView({ block: 'end', behavior: 'smooth' })
-  }, [enviando])
+  }, [enviando, mensagens.length])
 
   // Quando a decisão sai, o cartão de resultado fica à vista
   const decisao = resumo.resultado?.decisao
@@ -313,7 +314,7 @@ export function Testar() {
       <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 px-5 py-5">
         <LogoHorizontal altura={34} />
         <div>
-          <h1 className="text-[1.75rem]">Precisa passar veneno? O pano responde.</h1>
+          <h1 className="text-[1.75rem]">Precisa aplicar inseticida? O pano responde.</h1>
           <p className="mt-2 text-ardosia-700">
             Muita lavoura é pulverizada por calendário, mesmo sem praga suficiente. O pano de batida mostra o que tem de verdade.
           </p>
@@ -353,11 +354,11 @@ export function Testar() {
       {avisoDemo}
 
       <div className="flex-1 overflow-y-auto" aria-live="polite">
-        <Chat mensagens={mensagens} vazio="Carregando a conversa..." aoTocarOpcao={enviando ? undefined : (id, titulo) => void enviar('BOTAO', { botaoId: id, texto: titulo })} />
+        <Chat mensagens={mensagens} vazio="Carregando a conversa..." aoTocarOpcao={enviando ? undefined : (id, titulo) => void enviar('BOTAO', { botaoId: id, texto: titulo }).then(() => { if (id === 'FOTO_NOVA') setFolha('foto') })} />
         {resumo.resultado && resumo.talhao && (
           <div ref={cartao}>
             <Resultado talhao={resumo.talhao} r={resumo.resultado} />
-            <button type="button" className="btn btn-contorno mx-3 mb-4 min-h-12 w-[calc(100%-1.5rem)]" disabled={enviando !== null} onClick={() => void enviar('TEXTO', { texto: 'trocar' })}>
+            <button type="button" className="btn btn-contorno mx-3 mb-4 min-h-12 w-[calc(100%-1.5rem)]" disabled={enviando !== null} onClick={() => void enviar('BOTAO', { botaoId: 'TROCAR', texto: 'Testar outro talhão' })}>
               Testar outro talhão
             </button>
           </div>
@@ -372,7 +373,7 @@ export function Testar() {
         {folha && (
           <div className="mb-3 max-h-[55vh] overflow-y-auto">
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-lg">{folha === 'foto' ? 'Foto do pano' : precisaConferir ? 'Confira a contagem' : 'Contar no dedo'}</h2>
+              <h2 className="text-lg">{folha === 'foto' ? 'Foto do pano' : contagemDaPergunta(precisaConferir?.texto ?? null) ? 'Confira a contagem' : 'Contar no dedo'}</h2>
               <button type="button" className="btn btn-neutro btn-icone min-h-11 min-w-11" aria-label="Fechar" onClick={() => setFolha(null)}><X size={20} aria-hidden="true" /></button>
             </div>
             {folha === 'contar' ? <Contador key={precisaConferir?.id ?? 'livre'} inicial={contagemDaPergunta(precisaConferir?.texto ?? null)} aoEnviar={(t) => void enviar('TEXTO', { texto: t })} /> : (

@@ -73,7 +73,11 @@ class PainelApiTest {
     void dashboardAbreComDadosDeExemplo() throws Exception {
         JsonNode d = obter("/api/dashboard");
         assertTrue(d.get("acima").size() >= 2, "Sede e Várzea devem estar ACIMA");
-        assertTrue(d.get("perto").size() >= 2);
+        assertTrue(d.get("perto").size() >= 1);
+        // cada talhão fica num grupo só: o Lote 3 (PERTO há 8 dias) aparece em "sem monitoramento", não em "perto"
+        for (JsonNode t : d.get("perto")) {
+            assertNotEquals("Lote 3", t.get("nome").asText());
+        }
         assertTrue(d.get("semMonitoramento").size() >= 2, "Lote 3 e Sítio Boa Vista estão parados há 7+ dias");
         assertEquals(12, d.get("pressaoSemanal").size());
         assertTrue(d.get("aplicacoesEvitadas").asDouble() > 0);

@@ -15,7 +15,8 @@ public final class Dtos {
     public record TalhaoResumo(Long id, String nome, Long produtorId, String produtorNome, BigDecimal hectares,
                                String estadio, Finalidade finalidade, Double latitude, Double longitude,
                                Decisao decisao, LocalDateTime ultimoMonitoramentoEm, long diasSemMonitorar,
-                               Double mediaPercevejos, Double mediaLagartas, Double mediaDesfolha, Long alertaId) {
+                               Double mediaPercevejos, Double mediaLagartas, Double mediaDesfolha, Long alertaId,
+                               boolean aplicado, boolean visitante) {
     }
 
     public record AmostraDto(Long id, int percevejos, int lagartas, int desfolha, Origem origem,
@@ -47,6 +48,6 @@ public final class Dtos {
                             double economiaEstimada, double custoAplicacaoHa, List<PressaoSemanal> pressaoSemanal) {
     }
 
-    public record ProdutorDto(Long id, String nome, String telefone, List<TalhaoResumo> talhoes) {
+    public record ProdutorDto(Long id, String nome, String telefone, List<TalhaoResumo> talhoes, boolean visitante) {
     }
 }

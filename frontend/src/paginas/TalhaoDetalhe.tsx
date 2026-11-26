@@ -8,7 +8,7 @@ import { FormTalhao } from '../componentes/FormTalhao'
 import { GraficoPontos } from '../componentes/GraficoPontos'
 import { Lightbox } from '../componentes/Lightbox'
 import { StatusBadge } from '../componentes/StatusBadge'
-import { statusDe, type Status } from '../status'
+import { statusDe, statusDoTalhao, type Status } from '../status'
 import { useToast } from '../contextoToast'
 import { NOME_FINALIDADE, dataHora, numero, textoDias } from '../formatar'
 import { mensagemDeErro, useCarregar } from '../hooks'
@@ -23,6 +23,7 @@ const ORIGEM: Record<Origem, { nome: string; icone: LucideIcon }> = {
 // Marcador da linha do tempo: mesma regra de cor do StatusBadge (terra roxa só em "aplicar")
 const MARCADOR: Record<Status, string> = {
   APLICAR: 'bg-terra-600',
+  APLICADO: 'bg-soja-800',
   ATENCAO: 'bg-ouro-500',
   OK: 'bg-soja-600',
   SEM_DADO: 'bg-ardosia-400',
@@ -121,7 +122,7 @@ export function TalhaoDetalhe() {
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-3xl">{t.nome}</h1>
-              <StatusBadge decisao={t.decisao} longo />
+              <StatusBadge status={statusDoTalhao(t)} longo />
             </div>
             <p className="mt-1 text-ardosia-600">Produtor: <span className="font-semibold text-ardosia-900">{t.produtorNome}</span></p>
             <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">

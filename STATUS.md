@@ -3,18 +3,19 @@
 Atualizado em: 2026-11-26 · por: Claude
 
 ## Demanda em andamento
-Preparar o protótipo para a banca (2026-11-27) · nível: reforcado · sem commit (aguardando revisão).
+Preparar o protótipo para a banca (2026-11-27) · nível: reforcado.
 
 ## Estado
 Verificado nesta sessão:
 - `.\mvnw.cmd test` passa; `npm run build` ok; `npm run lint` com 2 avisos antigos.
-- `evento.ps1 -SemTunel`: banca em `/testar` (390 px) até a decisão, alerta confirmado no painel e resposta no celular, sem erro de console. Prints em `..\inovathon-prints`.
-- Plano B: quadro "WhatsApp / IA" no menu do painel.
+- IA real (OpenAI): foto ~3 s, áudio ~3,6 s (transcrição + leitura), frase solta ~2 s.
+- Correções da avaliação independente: limpar testes, visitantes fora dos indicadores, números impossíveis, foto que não é pano, conferência do áudio, status "Aplicado", textos.
+- Prints: `..\inovathon-prints` (antes, depois, depois-v2, avaliador).
 
-Não verificado: chamadas reais à OpenAI; link público do cloudflared; câmera e microfone em celular de verdade; WhatsApp da Meta.
+Não verificado: câmera e microfone num celular de verdade; foto real de pano; WhatsApp da Meta.
 
 ## Próximo passo
-Revogar a chave vazada, pôr a nova no `.env`, testar foto e áudio reais, rodar `evento.ps1` e testar pelo celular. Depois, commit.
+Teste no celular pelo checklist; validar os níveis com o professor de Agronomia; preço para a banca.
 
 ## Bloqueios e dúvidas
-A chave antiga continua no histórico do GitHub (repositório público) até ser revogada.
+Revogar a chave antiga da OpenAI (continua no histórico público do GitHub).

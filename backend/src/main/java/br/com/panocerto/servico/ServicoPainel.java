@@ -58,11 +58,12 @@ public class ServicoPainel {
 
         Decisao decisao = ultimoFechado.map(Monitoramento::getDecisao).orElse(null);
         Long alertaId = null;
+        boolean aplicado = false;
         if (decisao == Decisao.ACIMA) {
-            // O alerta do último monitoramento; se já foi confirmado, o talhão sai da lista de ACIMA.
+            // O alerta do último monitoramento; se já foi confirmado, o talhão fica "Aplicado".
             Optional<Alerta> alerta = alertas.findFirstByTalhaoIdOrderByCriadoEmDesc(t.getId());
             if (alerta.isPresent() && alerta.get().getStatus() == StatusAlerta.CONFIRMADO) {
-                decisao = Decisao.ABAIXO;
+                aplicado = true;
             } else {
                 alertaId = alerta.map(Alerta::getId).orElse(null);
             }
@@ -73,7 +74,7 @@ public class ServicoPainel {
                 ultimoFechado.map(Monitoramento::getMediaPercevejos).orElse(null),
                 ultimoFechado.map(Monitoramento::getMediaLagartas).orElse(null),
                 ultimoFechado.map(Monitoramento::getMediaDesfolha).orElse(null),
-                alertaId);
+                alertaId, aplicado, t.getProdutor().isVisitante());
     }
 
     public TalhaoDetalhe detalhe(Talhao t) {
@@ -110,21 +111,25 @@ public class ServicoPainel {
         List<Talhao> todos = talhoes.findByProdutorCooperativaIdOrderByNome(cooperativaId);
         List<TalhaoResumo> resumos = todos.stream().map(this::resumo).toList();
 
-        List<TalhaoResumo> acima = resumos.stream().filter(r -> r.decisao() == Decisao.ACIMA).toList();
-        List<TalhaoResumo> perto = resumos.stream().filter(r -> r.decisao() == Decisao.PERTO).toList();
+        // Cada talhão aparece num grupo só: aplicar > sem monitorar (o "perto" antigo já venceu) > perto.
+        List<TalhaoResumo> acima = resumos.stream().filter(r -> r.decisao() == Decisao.ACIMA && !r.aplicado()).toList();
+        List<TalhaoResumo> perto = resumos.stream()
+                .filter(r -> r.decisao() == Decisao.PERTO && r.diasSemMonitorar() < DIAS_SEM_MONITORAR).toList();
         List<TalhaoResumo> semMonitoramento = resumos.stream()
-                .filter(r -> r.diasSemMonitorar() >= DIAS_SEM_MONITORAR)
+                .filter(r -> r.diasSemMonitorar() >= DIAS_SEM_MONITORAR && !acima.contains(r))
                 .sorted(Comparator.comparingLong(TalhaoResumo::diasSemMonitorar).reversed()).toList();
 
         // Aplicações evitadas: o calendário fixo (3,6 por safra) menos o que foi aplicado de fato.
         LocalDateTime inicio = inicioDaSafra();
+        // Visitantes da banca ficam fora dos indicadores gerais.
         Map<Long, Long> feitasPorTalhao = aplicacoes
                 .findByTalhaoProdutorCooperativaIdAndDataHoraAfter(cooperativaId, inicio).stream()
                 .collect(Collectors.groupingBy(a -> a.getTalhao().getId(), Collectors.counting()));
         double evitadas = 0;
         double economia = 0;
         int feitas = 0;
-        for (Talhao t : todos) {
+        List<Talhao> daCooperativa = todos.stream().filter(t -> !t.getProdutor().isVisitante()).toList();
+        for (Talhao t : daCooperativa) {
             long f = feitasPorTalhao.getOrDefault(t.getId(), 0L);
             feitas += (int) f;
             double evitadasDoTalhao = Math.max(0, APLICACOES_DO_CALENDARIO - f);
@@ -133,7 +138,7 @@ public class ServicoPainel {
         }
 
         return new Dashboard(acima, perto, semMonitoramento,
-                arredondar(evitadas), arredondar(APLICACOES_DO_CALENDARIO * todos.size()), feitas,
+                arredondar(evitadas), arredondar(APLICACOES_DO_CALENDARIO * daCooperativa.size()), feitas,
                 arredondar(economia), config.custoAplicacaoHa(), pressaoSemanal(cooperativaId));
     }
 
@@ -148,6 +153,9 @@ public class ServicoPainel {
         }
         for (Amostra a : amostras.findByMonitoramentoTalhaoProdutorCooperativaIdAndCriadaEmAfter(
                 cooperativaId, primeiraSemana.atStartOfDay())) {
+            if (a.getMonitoramento().getTalhao().getProdutor().isVisitante()) {
+                continue;   // o que a banca testa não entra no gráfico da cooperativa
+            }
             LocalDate semana = a.getCriadaEm().toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
             int[] valores = porSemana.get(semana);
             if (valores != null) {

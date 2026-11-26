@@ -79,6 +79,7 @@ public class ServicoBanca {
         // Começa com 00: nunca é um telefone de verdade
         produtor.setTelefone("00" + (10_000_000_000L + sorteio.nextLong(89_999_999_999L)));
         produtor.setCooperativa(cooperativa);
+        produtor.setVisitante(true);
         produtores.save(produtor);
         criarTalhao(produtor, "Sede", "20", "R5", Finalidade.GRAO);
         criarTalhao(produtor, "Várzea", "12", "R3", Finalidade.SEMENTE);
@@ -139,6 +140,11 @@ public class ServicoBanca {
                         .filter(t -> !t.getId().equals(talhao.getId()))
                         .mapToDouble(t -> t.getHectares().doubleValue()).sum();
         return area * config.custoAplicacaoHa();
+    }
+
+    /** Botão "Limpar testes": todos os celulares voltam para a tela de entrada. */
+    public void esquecerVisitantes() {
+        visitantes.clear();
     }
 
     public String telefoneDe(String codigo) {
