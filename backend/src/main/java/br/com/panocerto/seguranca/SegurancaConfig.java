@@ -40,7 +40,7 @@ public class SegurancaConfig {
                         .requestMatchers("/midias/**").permitAll()    // fotos e áudios (nomes aleatórios, usados em <img>)
                         .requestMatchers("/api/**").authenticated()
                         .requestMatchers("/error").permitAll()
-                        .anyRequest().denyAll())
+                        .anyRequest().permitAll())   // telas e arquivos do painel (públicos); os dados ficam em /api
                 .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .addFilterBefore(filtroJwt, UsernamePasswordAuthenticationFilter.class);
         return http.build();

@@ -35,6 +35,12 @@ public class TratadorErros {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(Map.of("mensagem", "Arquivo grande demais (máximo 20 MB)."));
     }
 
+    /** Arquivo do painel que não existe: 404, sem poluir o log. */
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<Map<String, String>> naoAchado(Exception e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("mensagem", "Não encontrado."));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> inesperado(Exception e) {
         log.error("Erro inesperado", e);

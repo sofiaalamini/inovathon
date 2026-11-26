@@ -5,5 +5,7 @@ dist/
 backend/target/
 backend/dados/
 backend/uploads/
+# painel copiado para dentro do backend no build do Docker
+backend/src/main/resources/static/
 .idea/
 .vscode/

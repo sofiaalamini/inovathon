@@ -1,0 +1,20 @@
+# Blueprint do Render (plano grátis). As variáveis com sync: false são preenchidas no painel do Render.
+services:
+  - type: web
+    name: panocerto
+    runtime: docker
+    plan: free
+    region: virginia
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/banca
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SENHA_PAINEL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MODO_BANCA
+        value: "true"
+      - key: CUSTO_APLICACAO_HA
+        value: "120"

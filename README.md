@@ -75,6 +75,13 @@ npm run build         # confere os tipos e gera o painel
 
 O simulador passa pelo **mesmo fluxo** (`ServicoRobo`) do webhook real.
 
+## No Render (endereço fixo)
+
+O `Dockerfile` monta o painel dentro do backend; o `render.yaml` descreve o serviço (plano grátis).
+Variáveis no painel do Render: `OPENAI_API_KEY` e `SENHA_PAINEL` (fixa). `JWT_SECRET` é gerada pelo Render; `MODO_BANCA=true`.
+O banco é H2 em arquivo: a cada reinício volta aos dados de exemplo. O plano grátis dorme após 15 min sem uso
+e demora para acordar: abra o endereço alguns minutos antes de apresentar.
+
 ## Dia da apresentação (banca testando no celular)
 
 1. No `.env`, preencha `OPENAI_API_KEY` (sem ela, foto e áudio são fictícios).

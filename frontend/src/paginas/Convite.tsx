@@ -19,6 +19,8 @@ export function Convite() {
       <p className="max-w-md text-lg text-ardosia-600">Aponte a câmera para o código e faça o papel do produtor.</p>
       {qr && <img src={qr} alt="QR code para a página de teste" className="w-full max-w-sm rounded-lg border border-linho-400" />}
       <p className="numero break-all text-sm text-ardosia-700">{endereco}</p>
+      {/* Quem já abriu pelo celular não precisa do QR: vai direto */}
+      <a href="/testar" className="btn btn-primario min-h-14 w-full max-w-sm text-lg">Já estou no celular: fazer o teste</a>
       {local && (
         <p role="alert" className="max-w-md rounded-md border border-ouro-500 bg-ouro-100 p-3 text-sm font-semibold text-ouro-900">
           Este endereço só funciona neste computador. Abra esta tela pelo link público que o script evento.ps1 mostra.
