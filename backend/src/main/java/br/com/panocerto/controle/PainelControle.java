@@ -90,9 +90,18 @@ public class PainelControle {
     public Map<String, Object> sistema() {
         return Map.of(
                 "whatsapp", mensageiro.modo(),
-                "claude", ia.claudeAtivo(),
-                "whisper", ia.whisperAtivo(),
-                "iaDemo", !ia.claudeAtivo() || !ia.whisperAtivo(),
+                "iaDemo", ia.emDemonstracao(),
+                "planoB", ia.planoB(),
                 "custoAplicacaoHa", config.custoAplicacaoHa());
+    }
+
+    public record PlanoB(boolean ativo) {
+    }
+
+    /** Plano B da apresentação: a IA para de ser chamada e responde com a demonstração. */
+    @org.springframework.web.bind.annotation.PostMapping("/sistema/plano-b")
+    public Map<String, Object> planoB(@org.springframework.web.bind.annotation.RequestBody PlanoB pedido) {
+        ia.definirPlanoB(pedido.ativo());
+        return Map.of("planoB", ia.planoB());
     }
 }

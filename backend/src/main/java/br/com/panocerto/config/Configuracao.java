@@ -18,7 +18,11 @@ public record Configuracao(
         double custoAplicacaoHa,
         String pastaUploads,
         boolean carregarDadosExemplo,
-        String origensPermitidas) {
+        String origensPermitidas,
+        String openaiModel,
+        String openaiModeloAudio,
+        boolean modoBanca,
+        String senhaPainel) {
 
     private static boolean preenchido(String valor) {
         return valor != null && !valor.isBlank();
@@ -33,7 +37,7 @@ public record Configuracao(
         return preenchido(anthropicApiKey);
     }
 
-    public boolean whisperConfigurado() {
+    public boolean openaiConfigurado() {
         return preenchido(openaiApiKey);
     }
 }

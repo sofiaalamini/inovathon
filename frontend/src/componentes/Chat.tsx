@@ -63,7 +63,7 @@ export function Chat({ mensagens, aoTocarOpcao, vazio = 'Nenhuma mensagem ainda.
                   )}
                   {m.tipo === 'AUDIO' && m.urlMidia && <audio controls src={m.urlMidia} className="mb-1 h-10 max-w-full" aria-label="Áudio do produtor" />}
                   {m.tipo === 'TEMPLATE' && <p className="mb-0.5 text-xs font-bold uppercase tracking-wide text-ardosia-500">Lembrete (modelo aprovado)</p>}
-                  {m.texto && <p className="whitespace-pre-line break-words">{m.texto}</p>}
+                  {m.texto && !(m.urlMidia && m.texto.startsWith('[')) && <p className="whitespace-pre-line break-words">{m.texto}</p>}
                   {m.opcoes.length > 0 && (
                     <div className="mt-2 flex flex-col gap-1.5">
                       {m.opcoes.map((o) => {
@@ -74,7 +74,7 @@ export function Chat({ mensagens, aoTocarOpcao, vazio = 'Nenhuma mensagem ainda.
                             type="button"
                             disabled={!ativa}
                             onClick={() => aoTocarOpcao?.(o.id, o.titulo)}
-                            className={`rounded-md border border-soja-500 bg-linho-50 px-3 text-center font-semibold text-soja-700 hover:bg-soja-50 disabled:cursor-default disabled:border-linho-400 disabled:text-ardosia-400 disabled:hover:bg-linho-50 ${grande ? 'min-h-12' : 'min-h-10'}`}
+                            className={`rounded-md border border-soja-500 bg-linho-50 px-3 text-center font-semibold text-soja-700 hover:bg-soja-50 disabled:cursor-default disabled:border-linho-400 disabled:text-ardosia-400 disabled:hover:bg-linho-50 ${grande ? 'min-h-12' : 'min-h-11'}`}
                           >
                             {o.titulo}
                           </button>
@@ -82,7 +82,7 @@ export function Chat({ mensagens, aoTocarOpcao, vazio = 'Nenhuma mensagem ainda.
                       })}
                     </div>
                   )}
-                  <p className="numero mt-1 text-right text-[11px] text-ardosia-500">{hora(m.criadaEm)}</p>
+                  <p className="numero mt-1 text-right text-xs text-ardosia-600">{hora(m.criadaEm)}</p>
                 </div>
               </div>
             </li>

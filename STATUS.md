@@ -1,20 +1,20 @@
 # Status
 
-Atualizado em: 2026-11-18 · por: Claude
+Atualizado em: 2026-11-26 · por: Claude
 
 ## Demanda em andamento
-Construção inicial do PanoCerto (as 7 etapas do pedido) · nível: reforcado (telefones, login, integrações) · sem git/branch.
+Preparar o protótipo para a banca (2026-11-27) · nível: reforcado · sem commit (aguardando revisão).
 
 ## Estado
 Verificado nesta sessão:
-- `.\mvnw.cmd test`: 72 testes, 0 falhas (RegraMip, parser, webhook, fluxo completo pelo simulador, API do painel, isolamento entre cooperativas).
-- `npm run build` ok; `npm run lint` com 1 aviso (setState em efeito de busca, padrão aceito).
-- Rodado de ponta a ponta no perfil `dev`: 3 pontos (texto, foto, áudio) -> ACIMA -> alerta -> `apliquei`; painel conferido no Edge (desktop e 390 px, sem erro de console).
+- `.\mvnw.cmd test` passa; `npm run build` ok; `npm run lint` com 2 avisos antigos.
+- `evento.ps1 -SemTunel`: banca em `/testar` (390 px) até a decisão, alerta confirmado no painel e resposta no celular, sem erro de console. Prints em `..\inovathon-prints`.
+- Plano B: quadro "WhatsApp / IA" no menu do painel.
 
-Não verificado: Cloud API da Meta, Claude e Whisper com chaves reais; `docker compose` e PostgreSQL (Docker não instalado).
+Não verificado: chamadas reais à OpenAI; link público do cloudflared; câmera e microfone em celular de verdade; WhatsApp da Meta.
 
 ## Próximo passo
-Confirmar os níveis do MIP com um agrônomo; criar o app na Meta e testar com chaves reais; aprovar o template do lembrete.
+Revogar a chave vazada, pôr a nova no `.env`, testar foto e áudio reais, rodar `evento.ps1` e testar pelo celular. Depois, commit.
 
 ## Bloqueios e dúvidas
-Nenhum.
+A chave antiga continua no histórico do GitHub (repositório público) até ser revogada.

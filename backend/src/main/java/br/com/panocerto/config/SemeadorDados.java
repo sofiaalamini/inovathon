@@ -82,9 +82,24 @@ public class SemeadorDados implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!config.carregarDadosExemplo() || cooperativas.count() > 0) {
+        if (config.carregarDadosExemplo() && cooperativas.count() == 0) {
+            semear();
+        }
+        trocarSenhaDoPainel();
+    }
+
+    /** Com o painel exposto na internet, a senha de exemplo é trocada pela SENHA_PAINEL. */
+    private void trocarSenhaDoPainel() {
+        if (config.senhaPainel() == null || config.senhaPainel().isBlank()) {
             return;
         }
+        usuarios.findByEmailIgnoreCase("tecnico@panocerto.com").ifPresent(tecnico -> {
+            tecnico.setSenhaHash(encoder.encode(config.senhaPainel()));
+            usuarios.save(tecnico);
+        });
+    }
+
+    private void semear() {
 
         Cooperativa coop = new Cooperativa();
         coop.setNome("Cooperativa Exemplo do Oeste");

@@ -136,8 +136,7 @@ export interface NivelAcao {
 
 export interface StatusSistema {
   whatsapp: 'simulador' | 'cloud-api'
-  claude: boolean
-  whisper: boolean
   iaDemo: boolean
+  planoB: boolean
   custoAplicacaoHa: number
 }

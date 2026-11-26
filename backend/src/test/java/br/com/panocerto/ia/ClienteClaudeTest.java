@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ClienteClaudeTest {
 
     private final ClienteClaude claude = new ClienteClaude(
-            new Configuracao("x".repeat(40), 1, "", "claude-sonnet-5-5", "", "", "", "", "", "", 0, "", false, ""),
+            new Configuracao("x".repeat(40), 1, "", "claude-sonnet-5-5", "", "", "", "", "", "", 0, "", false, "", "", "", false, ""),
             new ObjectMapper());
 
     @Test
@@ -33,9 +33,9 @@ class ClienteClaudeTest {
 
     @Test
     void semChavesAIaNaoEstaAtiva() {
-        var config = new Configuracao("x".repeat(40), 1, "", "m", "", "", "", "", "", "", 0, "", false, "");
+        var config = new Configuracao("x".repeat(40), 1, "", "m", "", "", "", "", "", "", 0, "", false, "", "", "", false, "");
         assertFalse(config.claudeConfigurado());
-        assertFalse(config.whisperConfigurado());
+        assertFalse(config.openaiConfigurado());
         assertFalse(config.whatsappConfigurado());
     }
 }

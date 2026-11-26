@@ -3,6 +3,7 @@ import { AuthProvider } from './AuthProvider'
 import { useAuth } from './contextoAuth'
 import { Layout } from './componentes/Layout'
 import { Alertas } from './paginas/Alertas'
+import { Convite } from './paginas/Convite'
 import { Conversas } from './paginas/Conversas'
 import { Exportar } from './paginas/Exportar'
 import { Inicio } from './paginas/Inicio'
@@ -11,6 +12,7 @@ import { Marca } from './paginas/Marca'
 import { Produtores } from './paginas/Produtores'
 import { Regras } from './paginas/Regras'
 import { Simulador } from './paginas/Simulador'
+import { Testar } from './paginas/Testar'
 import { TalhaoDetalhe } from './paginas/TalhaoDetalhe'
 import { Talhoes } from './paginas/Talhoes'
 import { ToastProvider } from './ToastProvider'
@@ -28,6 +30,8 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/testar" element={<Testar />} />
+            <Route path="/convite" element={<Convite />} />
             <Route element={<AreaLogada />}>
               <Route index element={<Inicio />} />
               <Route path="alertas" element={<Alertas />} />

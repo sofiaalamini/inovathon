@@ -75,12 +75,26 @@ npm run build         # confere os tipos e gera o painel
 
 O simulador passa pelo **mesmo fluxo** (`ServicoRobo`) do webhook real.
 
+## Dia da apresentação (banca testando no celular)
+
+1. No `.env`, preencha `OPENAI_API_KEY` (sem ela, foto e áudio são fictícios).
+2. Rode `powershell -ExecutionPolicy Bypass -File .\evento.ps1`.
+3. Abra o endereço `/convite` que o script mostra e projete o QR code.
+
+Cada pessoa que abre `/testar` vira um produtor fictício com dois talhões; os alertas dela aparecem no painel.
+**Plano B:** no painel, **segure o logo PanoCerto por 1 segundo** (celular ou computador). Um ponto dourado pequeno
+no logo mostra que está ligado; segure de novo para desligar. Foto e áudio passam a usar respostas prontas,
+avisadas na conversa. Se a IA demorar mais de 9 s ou falhar, só aquela mensagem cai na demonstração.
+No áudio em demonstração, o robô usa o que o navegador entendeu da fala e pergunta "Está certo?".
+
+Limites: 60 visitantes e 80 mensagens por visitante. O link muda a cada vez que o script roda.
+
 ## Como o sistema escolhe o modo
 
 | Se no `.env`... | O sistema usa |
 |---|---|
 | faltam `WHATSAPP_TOKEN` ou `WHATSAPP_PHONE_NUMBER_ID` | simulador de WhatsApp |
-| falta `ANTHROPIC_API_KEY` | contagem de foto e leitura de texto em **modo demo** |
+| faltam `ANTHROPIC_API_KEY` e `OPENAI_API_KEY` | contagem de foto em **modo demo** e texto lido só pelo parser |
 | falta `OPENAI_API_KEY` | transcrição de áudio em **modo demo** |
 
 O modo atual aparece no canto do menu do painel. Importante: com o WhatsApp **real** ligado e sem as chaves de IA, o robô **não inventa números**: ele pede que o produtor mande por texto.
@@ -125,7 +139,7 @@ O lembrete semanal (todo dia às 7h, fuso America/Sao_Paulo, para quem está há
 
 1. No **WhatsApp Manager > Modelos de mensagem > Criar modelo**.
 2. Categoria **Utilidade**, idioma **Português (BR)**, nome igual ao `WHATSAPP_TEMPLATE_LEMBRETE` (padrão `lembrete_pano`).
-3. Corpo: `Seu {{1}}, faz {{2}} dias do último pano no talhão {{3}}.`
+3. Corpo: `Olá, {{1}}! Faz {{2}} dias do último pano no talhão {{3}}.`
 4. Envie para aprovação. Os parâmetros são enviados nesta ordem: nome, dias, talhão.
 
 ## Estrutura do código

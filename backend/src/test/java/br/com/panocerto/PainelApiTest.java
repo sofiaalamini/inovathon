@@ -244,7 +244,7 @@ class PainelApiTest {
         JsonNode marlene = produtorPorNome("Marlene");
         boolean achou = false;
         for (JsonNode m : obter("/api/conversas/" + marlene.get("produtorId").asLong() + "/mensagens")) {
-            if (m.path("texto").asText().matches("Seu Marlene, faz \\d+ dias do último pano no talhão Lote 3\\.")) achou = true;
+            if (m.path("texto").asText().matches("Olá, Marlene! Faz \\d+ dias do último pano no talhão Lote 3\\.")) achou = true;
         }
         assertTrue(achou);
     }

@@ -72,6 +72,13 @@ public class SimuladorControle {
             throw new ResponseStatusException(BAD_REQUEST, "Escolha um produtor.");
         }
 
+        robo.processar(montar(numero, tipo, texto, botaoId, arquivo));
+        return Map.of("ok", true);
+    }
+
+    /** Valida o que chegou da tela e monta a mensagem (usado também pela página da banca). */
+    static MensagemEntrada montar(String numero, String tipo, String texto, String botaoId, MultipartFile arquivo)
+            throws IOException {
         MensagemEntrada.Tipo tipoEntrada;
         try {
             tipoEntrada = MensagemEntrada.Tipo.valueOf(tipo.toUpperCase());
@@ -96,7 +103,6 @@ public class SimuladorControle {
             throw new ResponseStatusException(BAD_REQUEST, "Escreva uma mensagem.");
         }
 
-        robo.processar(new MensagemEntrada(numero, tipoEntrada, texto, botaoId, null, midia, null));
-        return Map.of("ok", true);
+        return new MensagemEntrada(numero, tipoEntrada, texto, botaoId, null, midia, null);
     }
 }

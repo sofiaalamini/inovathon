@@ -5,13 +5,14 @@ import { api } from '../api'
 import { BotaoConfirmar } from '../componentes/BotaoConfirmar'
 import { Carregando, Erro, Vazio } from '../componentes/Estados'
 import { FormTalhao } from '../componentes/FormTalhao'
+import { GraficoPontos } from '../componentes/GraficoPontos'
 import { Lightbox } from '../componentes/Lightbox'
 import { StatusBadge } from '../componentes/StatusBadge'
 import { statusDe, type Status } from '../status'
 import { useToast } from '../contextoToast'
 import { NOME_FINALIDADE, dataHora, numero, textoDias } from '../formatar'
 import { mensagemDeErro, useCarregar } from '../hooks'
-import type { Amostra, Monitoramento, Origem, Produtor, TalhaoDetalhe as Detalhe } from '../tipos'
+import type { Amostra, Monitoramento, NivelAcao, Origem, Produtor, TalhaoDetalhe as Detalhe } from '../tipos'
 
 const ORIGEM: Record<Origem, { nome: string; icone: LucideIcon }> = {
   FOTO: { nome: 'Foto', icone: Camera },
@@ -92,6 +93,7 @@ export function TalhaoDetalhe() {
   const toast = useToast()
   const detalhe = useCarregar(() => api.get<Detalhe>(`/api/talhoes/${id}`), [id])
   const produtores = useCarregar(() => api.get<Produtor[]>('/api/produtores'))
+  const niveis = useCarregar(() => api.get<NivelAcao[]>('/api/niveis'))
   const [editando, setEditando] = useState(false)
   const [foto, setFoto] = useState<{ src: string; legenda: string } | null>(null)
 
@@ -149,6 +151,10 @@ export function TalhaoDetalhe() {
           aoSalvar={() => { setEditando(false); toast.sucesso('Talhão atualizado.'); void detalhe.recarregar(true) }}
           aoCancelar={() => setEditando(false)}
         />
+      )}
+
+      {monitoramentos[0] && monitoramentos[0].amostras.length > 0 && niveis.dados && (
+        <GraficoPontos m={monitoramentos[0]} talhao={t} niveis={niveis.dados} />
       )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">

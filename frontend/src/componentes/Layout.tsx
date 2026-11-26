@@ -1,12 +1,12 @@
 import {
-  BellRing, Ellipsis, FileDown, LayoutDashboard, LogOut, MessagesSquare, Palette, SlidersHorizontal, Smartphone, Sprout, Users, X,
+  BellRing, Ellipsis, FileDown, LayoutDashboard, LogOut, MessagesSquare, Palette, QrCode, SlidersHorizontal, Smartphone, Sprout, Users, X,
   type LucideIcon,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { api } from '../api'
 import { useAuth } from '../contextoAuth'
-import { useCarregar } from '../hooks'
+import { useAtualizarSozinho, useCarregar } from '../hooks'
 import type { Alerta, StatusSistema } from '../tipos'
 import { LogoHorizontal } from './Marca'
 
@@ -27,6 +27,7 @@ const GRUPOS: { titulo: string; itens: Item[] }[] = [
     titulo: 'Ferramentas',
     itens: [
       { para: '/simulador', rotulo: 'Simulador de WhatsApp', icone: Smartphone },
+      { para: '/convite', rotulo: 'QR code da banca', icone: QrCode },
       { para: '/regras', rotulo: 'Regras do MIP', icone: SlidersHorizontal },
       { para: '/exportar', rotulo: 'Exportar CSV', icone: FileDown },
     ],
@@ -47,6 +48,30 @@ export function Layout() {
 
   const alertas = useCarregar(() => api.get<Alerta[]>('/api/alertas'), [local.pathname])
   const sistema = useCarregar(() => api.get<StatusSistema>('/api/sistema'), [])
+  useAtualizarSozinho(() => void alertas.recarregar(true))
+
+  // Atalho do plano B: segurar o logo por 0,7 s. O sinal é um ponto dourado discreto no logo.
+  const segurando = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const soltar = () => { if (segurando.current) clearTimeout(segurando.current); segurando.current = null }
+  const atalho = {
+    onPointerDown: () => {
+      soltar()
+      segurando.current = setTimeout(() => { navigator.vibrate?.(40); void alternarPlanoB() }, 700)
+    },
+    onPointerUp: soltar,
+    onPointerLeave: soltar,
+    onPointerCancel: soltar,
+    onContextMenu: (e: { preventDefault: () => void }) => e.preventDefault(),
+    style: { WebkitTouchCallout: 'none', touchAction: 'manipulation' } as const,
+    className: 'relative inline-block select-none',
+  }
+  const ponto = sistema.dados?.planoB && <span className="absolute -right-1 bottom-0.5 h-1.5 w-1.5 rounded-full bg-ouro-400" aria-hidden="true" />
+
+  async function alternarPlanoB() {
+    await api.post('/api/sistema/plano-b', { ativo: !sistema.dados?.planoB })
+    await sistema.recarregar(true)
+  }
+
   const pendentes = alertas.dados?.filter((a) => a.status === 'PENDENTE').length ?? 0
 
   // Esc fecha a gaveta do celular
@@ -70,12 +95,13 @@ export function Layout() {
 
   const rodape = (
     <div className="space-y-3 border-t border-soja-700 pt-4">
+      {/* O "botão escondido": tocar no quadro de situação liga ou desliga o plano B da IA */}
       {sistema.dados && (
-        <p className="rounded-md bg-soja-800 px-3 py-2 text-xs leading-relaxed text-soja-100">
+        <button type="button" onClick={() => void alternarPlanoB()} aria-pressed={sistema.dados.planoB} title="Ligar ou desligar o plano B da IA" className="block w-full rounded-md bg-soja-800 px-3 py-2 text-left text-xs leading-relaxed text-soja-100">
           WhatsApp: {sistema.dados.whatsapp === 'simulador' ? 'simulador' : 'Cloud API da Meta'}
           <br />
-          IA: {sistema.dados.iaDemo ? 'modo demonstração' : 'Claude e Whisper'}
-        </p>
+          IA: {sistema.dados.iaDemo && !sistema.dados.planoB ? 'modo demonstração' : 'ligada'}{sistema.dados.planoB && '.'}
+        </button>
       )}
       <div className="flex items-center gap-3">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ouro-400 text-sm font-bold text-ouro-900" aria-hidden="true">{iniciais(nomeTecnico)}</span>
@@ -109,7 +135,7 @@ export function Layout() {
       {/* Barra lateral (computador) */}
       <aside className="hidden w-64 shrink-0 flex-col bg-soja-900 px-4 py-5 lg:sticky lg:top-0 lg:flex lg:h-screen">
         <div className="mb-7 px-2">
-          <LogoHorizontal altura={34} variante="claro" />
+          <span {...atalho}><LogoHorizontal altura={34} variante="claro" />{ponto}</span>
         </div>
         <nav aria-label="Principal" className="flex flex-1 flex-col gap-5 overflow-y-auto">
           {GRUPOS.map((g) => (
@@ -132,7 +158,7 @@ export function Layout() {
 
       {/* Barra do topo (celular) */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-linho-400 bg-linho-200 px-4 py-2.5 lg:hidden">
-        <LogoHorizontal altura={30} />
+        <span {...atalho}><LogoHorizontal altura={30} />{ponto}</span>
         <NavLink to="/alertas" className="relative flex h-10 w-10 items-center justify-center rounded-md hover:bg-linho-300" aria-label={pendentes > 0 ? `Alertas: ${pendentes} pendentes` : 'Alertas'}>
           <BellRing size={22} strokeWidth={1.75} aria-hidden="true" />
           {pendentes > 0 && <span className="numero absolute right-0.5 top-0.5 rounded-full bg-terra-600 px-1.5 text-[11px] font-semibold text-linho-50">{pendentes}</span>}

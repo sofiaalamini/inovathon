@@ -31,3 +31,13 @@ export function useCarregar<T>(buscar: () => Promise<T>, dependencias: unknown[]
 export function mensagemDeErro(e: unknown): string {
   return e instanceof ErroApi ? e.message : 'Algo deu errado. Tente de novo.'
 }
+
+/** Atualiza os dados sozinho: o que a banca manda no celular aparece no painel. */
+export function useAtualizarSozinho(recarregar: () => void, segundos = 4) {
+  const ref = useRef(recarregar)
+  useEffect(() => { ref.current = recarregar })
+  useEffect(() => {
+    const t = setInterval(() => ref.current(), segundos * 1000)
+    return () => clearInterval(t)
+  }, [segundos])
+}

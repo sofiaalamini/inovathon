@@ -104,7 +104,7 @@ class FluxoSimuladorIntegracaoTest {
         assertTrue(textoDaUltimaResposta(joaquim).contains("Faltam 2 pontos"));
 
         texto(joaquim, "1 percevejo 30 lagartas 10%");
-        assertTrue(textoDaUltimaResposta(joaquim).contains("Faltam 1 ponto"));
+        assertTrue(textoDaUltimaResposta(joaquim).contains("Falta 1 ponto"));
 
         long alertasAntes = alertas.count();
         texto(joaquim, "0 percevejos 30 lagartas 10%");
@@ -164,8 +164,12 @@ class FluxoSimuladorIntegracaoTest {
 
         // Foto: o robô conta (modo demo) e pergunta a desfolha com 3 botões
         mandar(valdir, "IMAGEM", null, null, new MockMultipartFile("arquivo", "pano.jpg", "image/jpeg", new byte[]{1, 2, 3, 4}));
+        // Foto qualquer em demonstração: o robô não sabe o que tem nela, então pede para conferir
+        JsonNode conferir = ultimaResposta(valdir);
+        assertTrue(conferir.get("texto").asText().endsWith("Está certo?"), conferir.get("texto").asText());
+        assertEquals("CONT_OK", conferir.get("opcoes").get(0).get("id").asText());
+        botao(valdir, "CONT_OK", "Está certo");
         JsonNode contagem = ultimaResposta(valdir);
-        assertTrue(contagem.get("texto").asText().startsWith("Contei "), contagem.get("texto").asText());
         assertTrue(contagem.get("texto").asText().contains("Quanto das folhas está comido?"));
         assertEquals(List.of("DESF_0", "DESF_10", "DESF_20"),
                 List.of(contagem.get("opcoes").get(0).get("id").asText(),
@@ -198,7 +202,7 @@ class FluxoSimuladorIntegracaoTest {
         botao(marlene, pergunta.get("opcoes").get(0).get("id").asText(), "Lote 1");
         mandar(marlene, "AUDIO", null, null, new MockMultipartFile("arquivo", "audio.webm", "audio/webm", new byte[]{9, 8, 7}));
         String resposta = textoDaUltimaResposta(marlene);
-        assertTrue(resposta.startsWith("Entendi: "), resposta);
+        assertTrue(resposta.startsWith("Entendi: ") && resposta.endsWith("Está certo?"), resposta);
         assertTrue(resposta.contains("percevejo") && resposta.contains("lagarta"));
     }
 

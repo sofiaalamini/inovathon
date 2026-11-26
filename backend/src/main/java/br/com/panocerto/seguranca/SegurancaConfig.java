@@ -35,6 +35,7 @@ public class SegurancaConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers("/api/banca/**").permitAll()   // visitantes; só responde no modo banca
                         .requestMatchers("/webhook/**").permitAll()   // a Meta chama aqui; a assinatura é conferida no controle
                         .requestMatchers("/midias/**").permitAll()    // fotos e áudios (nomes aleatórios, usados em <img>)
                         .requestMatchers("/api/**").authenticated()
@@ -49,9 +50,9 @@ public class SegurancaConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource(Configuracao config) {
         CorsConfiguration cors = new CorsConfiguration();
-        cors.setAllowedOrigins(Arrays.stream(config.origensPermitidas().split(",")).map(String::trim).toList());
+        cors.setAllowedOriginPatterns(Arrays.stream(config.origensPermitidas().split(",")).map(String::trim).toList());
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        cors.setAllowedHeaders(List.of("*"));
+        cors.setAllowedHeaders(List.of("*"));   // origens aceitam curinga (link do túnel)
         UrlBasedCorsConfigurationSource fonte = new UrlBasedCorsConfigurationSource();
         fonte.registerCorsConfiguration("/**", cors);
         return fonte;

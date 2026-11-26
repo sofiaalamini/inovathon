@@ -129,12 +129,24 @@ public class ServicoRobo {
         conversas.save(conversa);
     }
 
+    /** Primeira mensagem de quem entra pela página da banca: explica e já pergunta o talhão. */
+    public void saudar(String telefone) {
+        Produtor produtor = produtores.findByTelefoneIn(List.of(telefone)).stream().findFirst().orElseThrow();
+        ConversaEstado conversa = new ConversaEstado();
+        conversa.setTelefone(telefone);
+        conversa.setProdutor(produtor);
+        perguntarTalhao(conversa, produtor, "Olá, " + produtor.getNome() + "! Vamos bater o pano em 3 pontos do talhão. "
+                + "Em cada ponto, mande uma foto, um áudio ou um texto, como: 3 percevejos 4 lagartas 10%.\n");
+        conversa.setAtualizadaEm(Relogio.agora());
+        conversas.save(conversa);
+    }
+
     private void tratar(MensagemEntrada entrada, ConversaEstado c, Produtor p, Midia midia, String urlMidia) {
         switch (entrada.tipo()) {
             case BOTAO -> tratarBotao(c, p, entrada.botaoId());
             case TEXTO -> tratarTexto(c, p, entrada.texto());
             case IMAGEM -> tratarFoto(c, p, midia, urlMidia);
-            case AUDIO -> tratarAudio(c, p, midia, urlMidia);
+            case AUDIO -> tratarAudio(c, p, midia, urlMidia, entrada.texto());
             default -> envio.texto(p, "Ainda não entendo esse tipo de mensagem. "
                     + "Mande uma foto do pano, um áudio ou um texto. Digite ajuda para ver como usar.");
         }
@@ -175,7 +187,7 @@ public class ServicoRobo {
                 envio.texto(p, "Mande a foto, o áudio ou o texto do ponto.");
             }
         } else if (botaoId.equals("CONT_DIGITAR")) {
-            envio.texto(p, "Digite a contagem assim: 2 percevejos 3 lagartas");
+            envio.texto(p, "Corrija a contagem, assim: 2 percevejos 3 lagartas");
         } else {
             envio.texto(p, MSG_AJUDA);
         }
@@ -249,17 +261,18 @@ public class ServicoRobo {
         ServicoIa.Contagem contagem = ia.contarInsetos(midia.bytes(), midia.tipoMime());
         guardarPendencia(c, contagem.percevejos(), contagem.lagartas(), Origem.FOTO, urlMidia, null);
 
+        String aviso = contagem.simulada() ? " (contagem de demonstração)" : "";
         if (contagem.confianca() < CONFIANCA_MINIMA) {
             c.setEstado(EstadoConversa.CONFIRMANDO_CONTAGEM);
             envio.botoes(p, "Não tenho certeza da foto. Contei " + contar(contagem.percevejos(), contagem.lagartas())
-                            + ". Está certo? Se não, digite a contagem, assim: 2 percevejos 3 lagartas.",
-                    List.of(new Opcao("CONT_OK", "Está certo"), new Opcao("CONT_DIGITAR", "Vou digitar")));
+                            + ". Está certo?",
+                    List.of(new Opcao("CONT_OK", "Está certo"), new Opcao("CONT_DIGITAR", "Corrigir")));
             return;
         }
-        perguntarDesfolha(c, p, "Contei " + contar(contagem.percevejos(), contagem.lagartas()) + ". ");
+        perguntarDesfolha(c, p, "Contei " + contar(contagem.percevejos(), contagem.lagartas()) + aviso + ". ");
     }
 
-    private void tratarAudio(ConversaEstado c, Produtor p, Midia midia, String urlMidia) {
+    private void tratarAudio(ConversaEstado c, Produtor p, Midia midia, String urlMidia, String dicaDoNavegador) {
         if (midia == null) {
             envio.texto(p, "Não consegui abrir esse áudio. Tente gravar de novo.");
             return;
@@ -268,11 +281,24 @@ public class ServicoRobo {
         if (talhao == null) {
             return;
         }
-        String transcricao = ia.transcrever(midia.bytes(), midia.tipoMime());
-        ParserTexto.Numeros numeros = ia.extrairNumeros(transcricao);
+        ServicoIa.Transcricao ouvido = ia.transcrever(midia.bytes(), midia.tipoMime(), dicaDoNavegador);
+        String transcricao = ouvido.texto();
+        // O parser é instantâneo; a IA só entra se ele não achar os números.
+        ParserTexto.Numeros numeros = ParserTexto.interpretar(transcricao);
+        if (!numeros.temContagem() && !ouvido.simulada()) {
+            numeros = ia.extrairNumeros(transcricao);
+        }
         if (!numeros.temContagem()) {
             envio.texto(p, "Ouvi: \"" + transcricao + "\". Mas não achei a contagem. "
                     + "Mande de novo falando assim: dois percevejos, três lagartas.");
+            return;
+        }
+        if (ouvido.simulada()) {
+            // Transcrição aproximada: o produtor confere antes de virar ponto.
+            guardarPendencia(c, numeros.percevejos(), numeros.lagartas(), Origem.AUDIO, urlMidia, transcricao);
+            c.setEstado(EstadoConversa.CONFIRMANDO_CONTAGEM);
+            envio.botoes(p, "Entendi: " + contar(numeros.percevejos(), numeros.lagartas()) + ". Está certo?",
+                    List.of(new Opcao("CONT_OK", "Está certo"), new Opcao("CONT_DIGITAR", "Corrigir")));
             return;
         }
         receberContagem(c, p, numeros, Origem.AUDIO, urlMidia, transcricao, "Entendi: ");
@@ -290,7 +316,7 @@ public class ServicoRobo {
         guardarPendencia(c, n.percevejos(), n.lagartas(), origem, urlMidia, transcricao);
         String entendi = prefixo + contar(n.percevejos(), n.lagartas());
         if (n.desfolha() != null) {
-            envio.texto(p, entendi + " e " + n.desfolha() + "% de desfolha.");
+            envio.texto(p, prefixo + contarComDesfolha(n.percevejos(), n.lagartas(), n.desfolha()) + ".");
             finalizarAmostra(c, p, n.desfolha());
         } else {
             perguntarDesfolha(c, p, entendi + ". ");
@@ -317,13 +343,13 @@ public class ServicoRobo {
         Talhao talhao = c.getTalhaoAtual();
         ResultadoAmostra r = monitoramento.registrarAmostra(talhao, c.getPendentePercevejos(), c.getPendenteLagartas(),
                 desfolha, c.getPendenteOrigem(), c.getPendenteUrlMidia(), c.getPendenteTranscricao());
-        String resumo = contar(c.getPendentePercevejos(), c.getPendenteLagartas()) + " e " + desfolha + "% de desfolha";
+        String resumo = contarComDesfolha(c.getPendentePercevejos(), c.getPendenteLagartas(), desfolha);
         c.limparPendencia();
 
         if (r.resultado() == null) {
             int faltam = 3 - r.pontos();
             envio.texto(p, "Ponto " + r.pontos() + " registrado no talhão " + talhao.getNome() + ": " + resumo + ". "
-                    + "Faltam " + faltam + (faltam == 1 ? " ponto" : " pontos") + ". "
+                    + (faltam == 1 ? "Falta 1 ponto. " : "Faltam " + faltam + " pontos. ")
                     + "Bata o pano em outro lugar do talhão, longe do anterior.");
             return;
         }
@@ -473,6 +499,11 @@ public class ServicoRobo {
     private String contar(int percevejos, int lagartas) {
         return percevejos + (percevejos == 1 ? " percevejo" : " percevejos") + " e "
                 + lagartas + (lagartas == 1 ? " lagarta" : " lagartas");
+    }
+
+    /** "3 percevejos, 4 lagartas e 10% de desfolha" */
+    private String contarComDesfolha(int percevejos, int lagartas, int desfolha) {
+        return contar(percevejos, lagartas).replace(" e ", ", ") + " e " + desfolha + "% de desfolha";
     }
 
     private String numero(Double valor) {

@@ -42,7 +42,18 @@ public class RegraMip {
                             double mediaDesfolha, String mensagem, List<String> motivos) {
     }
 
+    /** Os níveis que valem para um talhão. percevejo é null quando ainda não conta (antes do R3). */
+    public record Limites(Double percevejo, double lagarta, double desfolha) {
+    }
+
     private final Niveis niveis;
+
+    public Limites limites(String estadio, Finalidade finalidade) {
+        Double percevejo = !Estadio.chegouNoR3(estadio) ? null
+                : finalidade == Finalidade.SEMENTE ? niveis.percevejoSemente() : niveis.percevejoGrao();
+        double desfolha = Estadio.reprodutivo(estadio) ? niveis.desfolhaReprodutiva() : niveis.desfolhaVegetativa();
+        return new Limites(percevejo, niveis.lagarta(), desfolha);
+    }
 
     public RegraMip(Niveis niveis) {
         this.niveis = niveis;

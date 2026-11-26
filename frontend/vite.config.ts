@@ -12,4 +12,8 @@ export default defineConfig({
       '/midias': 'http://localhost:8080',
     },
   },
+  // vite preview usa o mesmo proxy; libera o link público do cloudflared no dia do evento
+  preview: {
+    allowedHosts: ['.trycloudflare.com'],
+  },
 })

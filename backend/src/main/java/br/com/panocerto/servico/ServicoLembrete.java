@@ -71,7 +71,7 @@ public class ServicoLembrete {
 
     private void lembrar(Talhao talhao, long dias) {
         String nome = talhao.getProdutor().getNome();
-        String texto = "Seu " + nome + ", faz " + dias + " dias do último pano no talhão " + talhao.getNome() + ".";
+        String texto = "Olá, " + nome + "! Faz " + dias + " dias do último pano no talhão " + talhao.getNome() + ".";
         // Fora da janela de 24h o envio usa o template aprovado pela Meta (variáveis {{1}}, {{2}}, {{3}}).
         envio.lembrete(talhao.getProdutor(), config.whatsappTemplateLembrete(),
                 List.of(nome, String.valueOf(dias), talhao.getNome()), texto);

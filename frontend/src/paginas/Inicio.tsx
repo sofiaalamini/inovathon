@@ -1,12 +1,13 @@
 import { BellRing, CalendarCheck, PiggyBank, Send, Users, Sprout, CircleCheck } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { api } from '../api'
 import { Carregando, Erro, Titulo } from '../componentes/Estados'
+import { MapaTalhoes } from '../componentes/MapaTalhoes'
 import { StatusBadge } from '../componentes/StatusBadge'
 import { dinheiro, inteiro, numero, textoDias } from '../formatar'
-import { mensagemDeErro, useCarregar } from '../hooks'
+import { mensagemDeErro, useAtualizarSozinho, useCarregar } from '../hooks'
 import type { Dashboard, NivelAcao, PressaoSemanal, Produtor, TalhaoResumo } from '../tipos'
 import { useToast } from '../contextoToast'
 
@@ -81,6 +82,33 @@ export function Inicio() {
   const [hoje] = useState(() => new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }))
   const [enviando, setEnviando] = useState<number | null>(null)
   const [cobrados, setCobrados] = useState<number[]>([])
+  const [confirmando, setConfirmando] = useState<number | null>(null)
+  const alertasVistos = useRef<Set<number> | null>(null)
+
+  useAtualizarSozinho(() => { void dash.recarregar(true); void talhoes.recarregar(true); void produtores.recarregar(true) })
+
+  // Avisa na tela quando chega um alerta novo
+  useEffect(() => {
+    const acima = dash.dados?.acima
+    if (!acima) return
+    const vistos = alertasVistos.current
+    const novos = vistos ? acima.filter((t) => t.alertaId !== null && !vistos.has(t.alertaId)) : []
+    novos.forEach((t) => toast.sucesso(`Novo alerta: ${t.produtorNome}, talhão ${t.nome}.`))
+    alertasVistos.current = new Set(acima.flatMap((t) => (t.alertaId === null ? [] : [t.alertaId])))
+  }, [dash.dados, toast])
+
+  async function confirmar(t: TalhaoResumo) {
+    setConfirmando(t.id)
+    try {
+      await api.post(`/api/alertas/${t.alertaId}/confirmar`)
+      toast.sucesso(`Confirmado. ${t.produtorNome} já recebeu a resposta no WhatsApp.`)
+      await Promise.all([dash.recarregar(true), talhoes.recarregar(true)])
+    } catch (e) {
+      toast.erro(mensagemDeErro(e))
+    } finally {
+      setConfirmando(null)
+    }
+  }
 
   async function cobrar(t: TalhaoResumo) {
     setEnviando(t.id)
@@ -124,7 +152,11 @@ export function Inicio() {
         <div className="divide-y divide-linho-300">
           <Grupo titulo="Aplicar" quantidade={d.acima.length} destaque vazio="Nenhum talhão acima do nível. Bom sinal.">
             {d.acima.map((t) => (
-              <Linha key={t.id} t={t} selo={<StatusBadge decisao="ACIMA" />} acao={<Link to="/alertas" className="btn btn-aplicar btn-pequeno">Revisar alerta</Link>} />
+              <Linha key={t.id} t={t} selo={<StatusBadge decisao="ACIMA" />} acao={t.alertaId === null ? undefined : (
+                <button type="button" className="btn btn-aplicar" disabled={confirmando === t.id} onClick={() => void confirmar(t)}>
+                  {confirmando === t.id ? 'Confirmando...' : 'Confirmar aplicação'}
+                </button>
+              )} />
             ))}
           </Grupo>
           <Grupo titulo="Atenção: volte a bater o pano em 3 dias" quantidade={d.perto.length} vazio="Nenhum talhão perto do nível.">
@@ -182,6 +214,8 @@ export function Inicio() {
           explicacao="Produtores com algum talhão monitorado nos últimos 7 dias."
         />
       </section>
+
+      <MapaTalhoes talhoes={todosTalhoes} />
 
       {/* Pressão de percevejos */}
       <section aria-labelledby="pressao" className="cartao">

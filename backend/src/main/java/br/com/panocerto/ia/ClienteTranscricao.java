@@ -13,23 +13,23 @@ import org.springframework.web.client.RestClient;
 import java.net.http.HttpClient;
 import java.time.Duration;
 
-/** Transcreve áudio com o Whisper da OpenAI (o Claude não transcreve áudio). Idioma fixo: português. */
+/** Transcreve áudio com a OpenAI (o Claude não transcreve áudio). */
 @Component
-public class ClienteWhisper {
+public class ClienteTranscricao {
 
     private final Configuracao config;
     private final RestClient http;
 
-    public ClienteWhisper(Configuracao config) {
+    public ClienteTranscricao(Configuracao config) {
         this.config = config;
         var fabrica = new JdkClientHttpRequestFactory(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build());
-        fabrica.setReadTimeout(Duration.ofSeconds(90));
+        fabrica.setReadTimeout(Duration.ofSeconds(25));
         this.http = RestClient.builder().baseUrl("https://api.openai.com").requestFactory(fabrica).build();
     }
 
     public String transcrever(byte[] audio, String tipoMime) {
         String nomeDoArquivo = "audio." + extensao(tipoMime);
-        // O Whisper decide o formato pelo nome do arquivo, por isso o recurso informa um nome.
+        // A OpenAI decide o formato pelo nome do arquivo, por isso o recurso informa um nome.
         ByteArrayResource arquivo = new ByteArrayResource(audio) {
             @Override
             public String getFilename() {
@@ -38,17 +38,17 @@ public class ClienteWhisper {
         };
         MultiValueMap<String, Object> corpo = new LinkedMultiValueMap<>();
         corpo.add("file", arquivo);
-        corpo.add("model", "whisper-1");
-        corpo.add("language", "pt");
+        corpo.add("model", config.openaiModeloAudio());
+        corpo.add("prompt", "Áudio em português do Brasil: um produtor de soja conta percevejos e lagartas no pano de batida.");
 
         JsonNode resposta = http.post().uri("/v1/audio/transcriptions")
-                .header("Authorization", "Bearer " + config.openaiApiKey())
+                .header("Authorization", "Bearer " + config.openaiApiKey().trim())
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(corpo)
                 .retrieve().body(JsonNode.class);
         String texto = resposta == null ? "" : resposta.path("text").asText("").trim();
         if (texto.isEmpty()) {
-            throw new IllegalStateException("O Whisper não entendeu o áudio.");
+            throw new IllegalStateException("A transcrição não entendeu o áudio.");
         }
         return texto;
     }

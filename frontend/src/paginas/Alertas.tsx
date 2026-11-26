@@ -9,7 +9,7 @@ import { StatusBadge } from '../componentes/StatusBadge'
 import { TabelaDados, type Coluna } from '../componentes/TabelaDados'
 import { useToast } from '../contextoToast'
 import { dataHora, numero } from '../formatar'
-import { mensagemDeErro, useCarregar } from '../hooks'
+import { mensagemDeErro, useAtualizarSozinho, useCarregar } from '../hooks'
 import type { Alerta, StatusAlerta } from '../tipos'
 
 const SITUACAO: Record<StatusAlerta, string> = {
@@ -24,6 +24,7 @@ export function Alertas() {
   const [busca, setBusca] = useState('')
   const [situacao, setSituacao] = useState('PENDENTE')
   const [produtor, setProdutor] = useState('')
+  useAtualizarSozinho(() => void recarregar(true))
 
   async function responder(a: Alerta, acao: 'confirmar' | 'revisitar') {
     try {
@@ -53,7 +54,7 @@ export function Alertas() {
 
   const acoes = (a: Alerta) => a.status === 'PENDENTE' ? (
     <div className="flex flex-wrap items-center gap-2">
-      <BotaoConfirmar classe="btn btn-aplicar btn-pequeno" pergunta="Avisar o produtor para aplicar?" aoConfirmar={() => responder(a, 'confirmar')}>Confirmar aplicação</BotaoConfirmar>
+      <button type="button" className="btn btn-aplicar btn-pequeno" onClick={() => void responder(a, 'confirmar')}>Confirmar aplicação</button>
       <BotaoConfirmar pergunta="Pedir para revisitar?" aoConfirmar={() => responder(a, 'revisitar')}>Revisitar</BotaoConfirmar>
     </div>
   ) : <span className="text-sm text-ardosia-500">Respondido em {dataHora(a.resolvidoEm)}</span>
