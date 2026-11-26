@@ -305,7 +305,7 @@ public class ServicoRobo {
         String transcricao = ouvido.texto();
         // "Ouvi" só quando é o que a pessoa falou (IA ou navegador), nunca a frase pronta da demonstração.
         boolean ouviuDeVerdade = !ouvido.simulada() || (dicaDoNavegador != null && !dicaDoNavegador.isBlank());
-        String ouvi = ouviuDeVerdade ? "Ouvi: \"" + transcricao + "\".\n" : "";
+        String ouvi = ouviuDeVerdade ? "Ouvi: \"" + transcricao.strip().replaceAll("[.!?]+$", "") + "\".\n" : "";
 
         String problema = ParserTexto.problema(transcricao);
         if (problema != null) {
