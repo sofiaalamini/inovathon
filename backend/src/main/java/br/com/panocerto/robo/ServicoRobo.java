@@ -190,7 +190,7 @@ public class ServicoRobo {
             } else {
                 envio.texto(p, "Mande a foto, o áudio ou o texto do ponto.");
             }
-        } else if (botaoId.equals("CONT_DIGITAR")) {
+        } else if (botaoId.equals("CONT_DIGITAR") || botaoId.equals("ABRIR_CONTADOR")) {
             envio.texto(p, c.getEstado() == EstadoConversa.CONFIRMANDO_CONTAGEM
                     ? "Corrija a contagem, assim: 2 percevejos 3 lagartas"
                     : "Conte no botão Contar ou escreva assim: 2 percevejos 3 lagartas 10%");
@@ -272,13 +272,20 @@ public class ServicoRobo {
             return;
         }
         ServicoIa.Contagem contagem = ia.contarInsetos(midia.bytes(), midia.tipoMime());
-        if (contagem.confianca() < CONFIANCA_PANO || (contagem.percevejos() == 0 && contagem.lagartas() == 0)) {
+        if (!contagem.pano() || contagem.confianca() < CONFIANCA_PANO) {
             // Nada registrado: o produtor tenta outra foto ou conta no botão.
             envio.botoes(p, "Não parece uma foto do pano. Quer tentar de novo ou contar no botão?",
-                    List.of(new Opcao("FOTO_NOVA", "Tentar de novo"), new Opcao("CONT_DIGITAR", "Contar no botão")));
+                    List.of(new Opcao("FOTO_NOVA", "Tentar de novo"), new Opcao("ABRIR_CONTADOR", "Contar no botão")));
             return;
         }
         guardarPendencia(c, contagem.percevejos(), contagem.lagartas(), Origem.FOTO, urlMidia, null);
+        if (contagem.percevejos() == 0 && contagem.lagartas() == 0) {
+            // Pano vazio é resultado real (lavoura limpa), mas vale conferir.
+            c.setEstado(EstadoConversa.CONFIRMANDO_CONTAGEM);
+            envio.botoes(p, "Não vi nenhum inseto. O pano estava vazio mesmo?",
+                    List.of(new Opcao("CONT_OK", "Sim, estava vazio"), new Opcao("ABRIR_CONTADOR", "Não, vou corrigir")));
+            return;
+        }
 
         String aviso = contagem.simulada() ? " (contagem de demonstração)" : "";
         boolean muito = contagem.percevejos() > LIMITE_CONFERIR || contagem.lagartas() > LIMITE_CONFERIR;

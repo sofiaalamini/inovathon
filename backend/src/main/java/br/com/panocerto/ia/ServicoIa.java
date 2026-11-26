@@ -21,9 +21,14 @@ public class ServicoIa {
     private static final Logger log = LoggerFactory.getLogger(ServicoIa.class);
 
     /** Resultado da contagem de uma foto. Confiança de 0 a 1. */
-    public record Contagem(int percevejos, int lagartas, double confianca, boolean simulada) {
+    /** pano = false quando a IA diz que a foto nem é de um pano de batida. */
+    public record Contagem(int percevejos, int lagartas, double confianca, boolean simulada, boolean pano) {
+        public Contagem(int percevejos, int lagartas, double confianca, boolean simulada) {
+            this(percevejos, lagartas, confianca, simulada, true);
+        }
+
         public Contagem(int percevejos, int lagartas, double confianca) {
-            this(percevejos, lagartas, confianca, false);
+            this(percevejos, lagartas, confianca, false, true);
         }
     }
 

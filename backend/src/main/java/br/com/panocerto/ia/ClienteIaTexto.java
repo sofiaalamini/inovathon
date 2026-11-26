@@ -23,10 +23,12 @@ abstract class ClienteIaTexto {
 
     static final String PROMPT_FOTO = """
             Esta foto mostra um pano de batida de soja: um pano branco onde caíram insetos das plantas.
-            Se a foto não for de um pano de batida, use confianca 0.
+            Primeiro diga se a foto é mesmo de um pano de batida (um pano ou tecido claro, mesmo que vazio).
+            Céu, grama, pessoa, documento ou qualquer outra coisa: "pano": false.
             Conte os percevejos (adultos e ninfas) e as lagartas grandes (maiores que 1,5 cm) que aparecem no pano.
+            Pano sem nenhum inseto é um resultado válido: "pano": true com 0 e 0.
             Responda SOMENTE com JSON, sem nenhum texto antes ou depois, neste formato:
-            {"percevejos": n, "lagartas": n, "confianca": 0-1}
+            {"pano": true ou false, "percevejos": n, "lagartas": n, "confianca": 0-1}
             "confianca" é o quanto você confia na contagem: 1 para foto nítida, perto de 0 se não dá para contar.""";
 
     static final String PROMPT_TEXTO = """
@@ -56,7 +58,8 @@ abstract class ClienteIaTexto {
         int percevejos = inteiro(resposta, "percevejos");
         int lagartas = inteiro(resposta, "lagartas");
         double confianca = resposta.path("confianca").asDouble(0);
-        return new ServicoIa.Contagem(percevejos, lagartas, Math.max(0, Math.min(1, confianca)));
+        boolean pano = resposta.path("pano").asBoolean(true);   // se a IA não disser, vale a confiança
+        return new ServicoIa.Contagem(percevejos, lagartas, Math.max(0, Math.min(1, confianca)), false, pano);
     }
 
     public ParserTexto.Numeros extrairNumeros(String texto) {

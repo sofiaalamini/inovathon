@@ -354,7 +354,7 @@ export function Testar() {
       {avisoDemo}
 
       <div className="flex-1 overflow-y-auto" aria-live="polite">
-        <Chat mensagens={mensagens} vazio="Carregando a conversa..." aoTocarOpcao={enviando ? undefined : (id, titulo) => void enviar('BOTAO', { botaoId: id, texto: titulo }).then(() => { if (id === 'FOTO_NOVA') setFolha('foto') })} />
+        <Chat mensagens={mensagens} vazio="Carregando a conversa..." aoTocarOpcao={enviando ? undefined : (id, titulo) => void enviar('BOTAO', { botaoId: id, texto: titulo }).then(() => { if (id === 'FOTO_NOVA') setFolha('foto'); if (id === 'ABRIR_CONTADOR') setFolha('contar') })} />
         {resumo.resultado && resumo.talhao && (
           <div ref={cartao}>
             <Resultado talhao={resumo.talhao} r={resumo.resultado} />
