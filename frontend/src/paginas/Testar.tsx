@@ -23,7 +23,7 @@ type Tipo = 'TEXTO' | 'IMAGEM' | 'AUDIO' | 'BOTAO'
 
 /** "Entendi: 3 percevejos e 4 lagartas. Está certo?" -> { 3, 4 } para abrir o contador já preenchido. */
 function contagemDaPergunta(texto: string | null): { percevejos: number; lagartas: number } | undefined {
-  const m = /(?:Entendi|Contei):? (\d+) percevejos? e (\d+) lagartas?/.exec(texto ?? '')
+  const m = /(?:Entendi|Contei|Você informou):? (\d+) percevejos? e (\d+) lagartas?/.exec(texto ?? '')
   return m ? { percevejos: Number(m[1]), lagartas: Number(m[2]) } : undefined
 }
 

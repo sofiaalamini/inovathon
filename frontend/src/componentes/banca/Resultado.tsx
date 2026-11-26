@@ -1,13 +1,14 @@
-import { CalendarClock, CircleCheck, Clock, PiggyBank, TriangleAlert } from 'lucide-react'
-import { dinheiro, numero } from '../../formatar'
+import { CalendarClock, CircleCheck, Clock, Sprout, TriangleAlert } from 'lucide-react'
+import { numero } from '../../formatar'
 
-export interface Medida { nome: string; media: number; limite: number | null; unidade: string }
+export interface Medida { nome: string; media: number; limite: number | null; unidade: string; nota: string | null }
 export interface ResultadoBanca {
   decisao: 'ACIMA' | 'PERTO' | 'ABAIXO'
   medidas: Medida[]
   hectares: number
   economia: number
   alerta: 'PENDENTE' | 'CONFIRMADO' | 'REVISITAR' | null
+  areaSemPulverizar: number
 }
 
 // Terra roxa só em "aplicar"
@@ -35,7 +36,7 @@ function Barra({ m }: { m: Medida }) {
     <li>
       <p className="flex justify-between gap-2 text-sm">
         <strong>{m.nome}</strong>
-        <span><span className="numero font-semibold">{valor}</span> <span className="text-ardosia-600">(limite {numero(m.limite, 0)}{m.unidade === '%' ? '%' : ''})</span></span>
+        <span><span className="numero font-semibold">{valor}</span> <span className="text-ardosia-600">(limite {numero(m.limite, 0)}{m.unidade === '%' ? '%' : ''}{m.nota ? ` (${m.nota})` : ''})</span></span>
       </p>
       <div className="relative mt-1 h-3 rounded-full bg-linho-300" aria-hidden="true">
         <div className={`h-3 rounded-full ${passou ? 'bg-terra-600' : 'bg-soja-500'}`} style={{ width: `${(m.media / escala) * 100}%` }} />
@@ -73,14 +74,13 @@ export function Resultado({ talhao, r }: { talhao: string; r: ResultadoBanca }) 
             <p>Ainda não é hora de gastar com inseticida. <strong>Monitore de novo em 3 dias</strong> para ver se a praga sobe.</p>
           </div>
         )}
-        {r.economia > 0 && r.decisao !== 'PERTO' && (
-          <div className="flex gap-3 rounded-md border border-ouro-400 bg-ouro-50 p-3">
-            <PiggyBank size={24} className="shrink-0 text-ouro-700" aria-hidden="true" />
+        {r.areaSemPulverizar > 0 && r.decisao !== 'PERTO' && (
+          <div className="flex gap-3 rounded-md border border-soja-300 bg-soja-50 p-3">
+            <Sprout size={24} className="shrink-0 text-soja-700" aria-hidden="true" />
             <p>
               {r.decisao === 'ACIMA'
-                ? <>Aplicando <strong>só aqui</strong>, e não na propriedade toda, você deixa de gastar cerca de <strong className="numero">{dinheiro(r.economia)}</strong>.</>
-                : <>Você evitou uma pulverização agora: cerca de <strong className="numero">{dinheiro(r.economia)}</strong> neste talhão.</>}
-              <span className="block text-sm text-ardosia-600">Estimativa por hectare, para demonstração.</span>
+                ? <>Aplicando <strong>só aqui</strong>, <strong className="numero">{numero(r.areaSemPulverizar)} ha</strong> da propriedade ficam sem pulverizar.</>
+                : <>Você evitou uma pulverização agora em <strong className="numero">{numero(r.areaSemPulverizar)} ha</strong>.</>}
             </p>
           </div>
         )}

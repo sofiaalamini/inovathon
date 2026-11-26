@@ -347,7 +347,8 @@ public class ServicoRobo {
         if (n.percevejos() > LIMITE_CONFERIR || n.lagartas() > LIMITE_CONFERIR) {
             c.setPendenteDesfolha(n.desfolha());
             c.setEstado(EstadoConversa.CONFIRMANDO_CONTAGEM);
-            envio.botoes(p, "Contei " + contar(n.percevejos(), n.lagartas()) + " num pano só. É bastante: está certo?",
+            String quem = origem == Origem.TEXTO ? "Você informou " : "Contei ";
+            envio.botoes(p, quem + contar(n.percevejos(), n.lagartas()) + " num pano só. É bastante: está certo?",
                     List.of(new Opcao("CONT_OK", "Sim, está certo"), new Opcao("CONT_DIGITAR", "Corrigir")));
             return;
         }

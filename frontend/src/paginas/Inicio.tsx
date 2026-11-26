@@ -1,4 +1,4 @@
-import { BellRing, CalendarCheck, PiggyBank, Send, Users, Sprout, CircleCheck } from 'lucide-react'
+import { BellRing, Send, Users, Sprout, CircleCheck } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -6,7 +6,7 @@ import { api } from '../api'
 import { Carregando, Erro, Titulo } from '../componentes/Estados'
 import { MapaTalhoes } from '../componentes/MapaTalhoes'
 import { StatusBadge } from '../componentes/StatusBadge'
-import { dinheiro, inteiro, numero, textoDias } from '../formatar'
+import { inteiro, numero, textoDias } from '../formatar'
 import { mensagemDeErro, useAtualizarSozinho, useCarregar } from '../hooks'
 import type { Dashboard, NivelAcao, PressaoSemanal, Produtor, StatusSistema, TalhaoResumo } from '../tipos'
 import { BotaoConfirmar } from '../componentes/BotaoConfirmar'
@@ -29,7 +29,7 @@ function Linha({ t, selo, acao }: { t: TalhaoResumo; selo?: ReactNode; acao?: Re
           <span className="text-ardosia-600">{t.produtorNome}</span>
           {selo}
         </p>
-        <p className="numero text-[13px] text-ardosia-600">{t.estadio} · {numero(t.hectares)} ha</p>
+        <p className="numero text-[13px] text-ardosia-600">{t.estadio} · {numero(t.hectares)} ha{t.finalidade === 'SEMENTE' ? ' · semente (limite 1 percevejo)' : ''}</p>
         {t.decisao && <Medias t={t} />}
       </div>
       {acao}
@@ -49,7 +49,7 @@ function Grupo({ titulo, quantidade, vazio, children, destaque = false }: { titu
   )
 }
 
-function Indicador({ rotulo, valor, explicacao, icone: Icone }: { rotulo: string; valor: string; explicacao: string; icone: typeof PiggyBank }) {
+function Indicador({ rotulo, valor, explicacao, icone: Icone }: { rotulo: string; valor: string; explicacao: string; icone: typeof Sprout }) {
   return (
     <div className="cartao">
       <p className="flex items-center gap-2 text-sm font-semibold text-ardosia-600">
@@ -207,19 +207,7 @@ export function Inicio() {
       </section>
 
       {/* Indicadores */}
-      <section aria-label="Indicadores da safra" className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Indicador
-          icone={CalendarCheck}
-          rotulo="Aplicações evitadas na safra"
-          valor={numero(d.aplicacoesEvitadas)}
-          explicacao={`Calendário fixo de 3,6 aplicações por talhão (${numero(d.aplicacoesCalendario)} no total) menos as ${inteiro(d.aplicacoesFeitas)} feitas.`}
-        />
-        <Indicador
-          icone={PiggyBank}
-          rotulo="Economia estimada"
-          valor={dinheiro(d.economiaEstimada)}
-          explicacao={`Aplicações evitadas × hectares × ${dinheiro(d.custoAplicacaoHa)} por hectare (configurável).`}
-        />
+      <section aria-label="Indicadores da safra" className="mb-6 grid gap-4 sm:grid-cols-2">
         <Indicador
           icone={Sprout}
           rotulo="Talhões monitorados na semana"

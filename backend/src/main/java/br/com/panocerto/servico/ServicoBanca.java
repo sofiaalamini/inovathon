@@ -93,12 +93,13 @@ public class ServicoBanca {
     }
 
     /** limite null: este item não conta neste estádio. */
-    public record Medida(String nome, double media, Double limite, String unidade) {
+    /** nota: explica um limite diferente, ex.: "soja para semente". */
+    public record Medida(String nome, double media, Double limite, String unidade, String nota) {
     }
 
     /** economia: estimativa do que se deixa de gastar (ver calcularEconomia). */
     public record Resultado(Decisao decisao, List<Medida> medidas, double hectares, double economia,
-                            StatusAlerta alerta) {
+                            StatusAlerta alerta, double areaSemPulverizar) {
     }
 
     public record Resumo(String talhao, List<Ponto> pontos, Resultado resultado) {
@@ -122,24 +123,29 @@ public class ServicoBanca {
         }
         RegraMip.Limites limites = niveis.regra().limites(talhao.getEstadio(), talhao.getFinalidade());
         List<Medida> medidas = List.of(
-                new Medida("Percevejos", m.getMediaPercevejos(), limites.percevejo(), "por pano"),
-                new Medida("Lagartas", m.getMediaLagartas(), limites.lagarta(), "por pano"),
-                new Medida("Folha comida", m.getMediaDesfolha(), limites.desfolha(), "%"));
+                new Medida("Percevejos", m.getMediaPercevejos(), limites.percevejo(), "por pano",
+                        talhao.getFinalidade() == Finalidade.SEMENTE ? "soja para semente" : null),
+                new Medida("Lagartas", m.getMediaLagartas(), limites.lagarta(), "por pano", null),
+                new Medida("Folha comida", m.getMediaDesfolha(), limites.desfolha(), "%", null));
         StatusAlerta alerta = alertas.findFirstByTalhaoIdOrderByCriadoEmDesc(talhao.getId())
                 .filter(a -> a.getMonitoramento() != null && a.getMonitoramento().getId().equals(m.getId()))
                 .map(Alerta::getStatus).orElse(null);
         return new Resumo(talhao.getNome(), pontos, new Resultado(m.getDecisao(), medidas,
-                talhao.getHectares().doubleValue(), calcularEconomia(talhao, m.getDecisao()), alerta));
+                talhao.getHectares().doubleValue(), calcularEconomia(talhao, m.getDecisao()), alerta,
+                areaSemPulverizar(talhao, m.getDecisao())));
     }
 
     /** Sem aplicar: a área do talhão. Aplicando: as outras áreas do produtor, que ficam sem pulverizar. */
     private double calcularEconomia(Talhao talhao, Decisao decisao) {
-        double area = decisao != Decisao.ACIMA
+        return areaSemPulverizar(talhao, decisao) * config.custoAplicacaoHa();
+    }
+
+    private double areaSemPulverizar(Talhao talhao, Decisao decisao) {
+        return decisao != Decisao.ACIMA
                 ? talhao.getHectares().doubleValue()
                 : talhoes.findByProdutorIdOrderByNome(talhao.getProdutor().getId()).stream()
                         .filter(t -> !t.getId().equals(talhao.getId()))
                         .mapToDouble(t -> t.getHectares().doubleValue()).sum();
-        return area * config.custoAplicacaoHa();
     }
 
     /** Botão "Limpar testes": todos os celulares voltam para a tela de entrada. */

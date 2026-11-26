@@ -68,9 +68,18 @@ abstract class ClienteIaTexto {
         Integer percevejos = inteiroOuNulo(resposta, "percevejos", 999);
         Integer lagartas = inteiroOuNulo(resposta, "lagartas", 999);
         Integer desfolha = inteiroOuNulo(resposta, "desfolha", 100);
+        if (!falouDeFolha(texto)) {
+            desfolha = null;   // a IA às vezes chuta a desfolha: sem o produtor falar, o robô pergunta
+        }
         if (percevejos != null && lagartas == null) lagartas = 0;
         if (lagartas != null && percevejos == null) percevejos = 0;
         return new ParserTexto.Numeros(percevejos, lagartas, desfolha);
+    }
+
+    /** O texto fala de folha ou de porcentagem? */
+    static boolean falouDeFolha(String texto) {
+        String t = texto == null ? "" : texto.toLowerCase();
+        return t.contains("folha") || t.contains("%") || t.contains("cento") || t.contains("comid");
     }
 
     /** Cada fornecedor implementa: manda o pedido (com ou sem foto) e devolve o JSON respondido. */

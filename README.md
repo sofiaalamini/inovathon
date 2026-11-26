@@ -28,7 +28,7 @@ O produtor bate o pano e manda **uma foto, um áudio ou um texto** pelo celular.
 3. **Regra do MIP:** quem **decide** é uma regra fixa, em código testado. Ela compara a média dos pontos com os níveis de ação. A IA nunca decide sozinha.
 4. **Técnico:** recebe o alerta no painel, confirma a aplicação com um clique, e o produtor é avisado na hora.
 
-O resultado aparece como um semáforo, com o motivo em linguagem simples e a economia estimada.
+O resultado aparece como um semáforo, com o motivo em linguagem simples e a área que fica sem pulverizar.
 
 <p align="center">
   <img src="docs/telas/painel-inicio.png" alt="Painel do técnico da cooperativa" width="820">
@@ -77,7 +77,7 @@ Testes: `cd backend; .\mvnw.cmd test`. O guia técnico completo, com a conexão 
 ## Avisos importantes
 
 - **Níveis de ação:** vêm das recomendações da **Embrapa Soja** e do **IDR-Paraná**. Eles **ainda estão em validação com agrônomo** e podem ser ajustados na tela "Regras do MIP".
-- **Economia:** a economia mostrada é uma **estimativa**, feita com um custo por hectare configurável e um calendário fixo de comparação. Não é um resultado medido no campo.
+- **Economia:** o protótipo não mostra valores em reais. A redução de aplicações citada no pitch vem da Embrapa Soja e do IDR-Paraná; a economia real será medida no piloto.
 - **Dados:** todos os produtores, talhões e números do protótipo são fictícios.
 
 ## Equipe
