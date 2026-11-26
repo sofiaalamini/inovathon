@@ -5,7 +5,8 @@
 FROM node:22-bookworm-slim AS painel
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+# npm install (e não npm ci): o lock gerado no Windows não traz os pacotes que só o Linux usa
+RUN npm install --no-audit --no-fund
 COPY frontend/ ./
 RUN npm run build
 
